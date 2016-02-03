@@ -82,7 +82,7 @@ public class LWCPlayerListener implements Listener {
         UUIDRegistry.updateCache(player.getUniqueId(), player.getName());
     }
 
-    @EventHandler(ignoreCancelled = true)
+    /*@EventHandler(ignoreCancelled = true)
     public void onMoveItem(InventoryMoveItemEvent event) {
         boolean result;
 
@@ -96,7 +96,7 @@ public class LWCPlayerListener implements Listener {
         if (result) {
             event.setCancelled(true);
         }
-    }
+    }*/
 
     /**
      * Handle the item move event

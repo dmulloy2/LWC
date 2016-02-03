@@ -128,7 +128,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.mcstats.Metrics;
+//import org.mcstats.Metrics;
 
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -1574,7 +1574,7 @@ public class LWC {
         moduleLoader.loadAll();
 
         // Should we try metrics?
-        if (!configuration.getBoolean("optional.optOut", false)) {
+        /*if (!configuration.getBoolean("optional.optOut", false)) {
             try {
                 Metrics metrics = new Metrics(plugin);
 
@@ -1632,7 +1632,7 @@ public class LWC {
             } catch (IOException e) {
                 log(e.getMessage());
             }
-        }
+        }*/
     }
 
     /**
