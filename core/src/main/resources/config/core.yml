@@ -62,6 +62,7 @@ optional:
     # Blocks that cannot be placed around someone else's protection. This is most useful
     blacklistedBlocks:
     - 166
+    - 154
 
     # Players that are blocked from destroying any blocks protected by LWC. Mainly useful for MCPC
     # where mods can remove blocks and try to break the block by sending an event first (e.g turtle)
