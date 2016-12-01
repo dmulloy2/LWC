@@ -28,22 +28,12 @@
 
 package com.griefcraft.integration.permissions;
 
-import de.bananaco.bpermissions.api.User;
-import de.bananaco.bpermissions.api.World;
-import de.bananaco.bpermissions.api.WorldManager;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public class bPermissions extends SuperPermsPermissions {
 
     /**
      * bPermissions permission handler
      */
-    private WorldManager handler;
+    /*private WorldManager handler;
 
     public bPermissions() {
         Plugin plugin = Bukkit.getServer().getPluginManager().getPlugin("bPermissions");
@@ -63,6 +53,6 @@ public class bPermissions extends SuperPermsPermissions {
         User user = world.getUser(player.getName());
 
         return new ArrayList<String>(user.getGroupsAsString());
-    }
+    }*/
 
 }

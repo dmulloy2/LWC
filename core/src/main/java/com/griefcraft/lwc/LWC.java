@@ -31,46 +31,14 @@ package com.griefcraft.lwc;
 import com.griefcraft.cache.ProtectionCache;
 import com.griefcraft.integration.ICurrency;
 import com.griefcraft.integration.IPermissions;
-import com.griefcraft.integration.currency.BOSECurrency;
-import com.griefcraft.integration.currency.EssentialsCurrency;
-import com.griefcraft.integration.currency.NoCurrency;
-import com.griefcraft.integration.currency.VaultCurrency;
-import com.griefcraft.integration.currency.iConomy5Currency;
-import com.griefcraft.integration.currency.iConomy6Currency;
-import com.griefcraft.integration.permissions.BukkitPermissions;
-import com.griefcraft.integration.permissions.PEXPermissions;
-import com.griefcraft.integration.permissions.SuperPermsPermissions;
-import com.griefcraft.integration.permissions.VaultPermissions;
-import com.griefcraft.integration.permissions.bPermissions;
+import com.griefcraft.integration.currency.*;
+import com.griefcraft.integration.permissions.*;
 import com.griefcraft.io.BackupManager;
 import com.griefcraft.listeners.LWCMCPCSupport;
 import com.griefcraft.migration.ConfigPost300;
 import com.griefcraft.migration.MySQLPost200;
-import com.griefcraft.model.Flag;
-import com.griefcraft.model.History;
-import com.griefcraft.model.LWCPlayer;
-import com.griefcraft.model.Permission;
-import com.griefcraft.model.Protection;
-import com.griefcraft.modules.admin.AdminBackup;
-import com.griefcraft.modules.admin.AdminCache;
-import com.griefcraft.modules.admin.AdminCleanup;
-import com.griefcraft.modules.admin.AdminClear;
-import com.griefcraft.modules.admin.AdminDump;
-import com.griefcraft.modules.admin.AdminExpire;
-import com.griefcraft.modules.admin.AdminFind;
-import com.griefcraft.modules.admin.AdminFlush;
-import com.griefcraft.modules.admin.AdminForceOwner;
-import com.griefcraft.modules.admin.AdminLocale;
-import com.griefcraft.modules.admin.AdminPurge;
-import com.griefcraft.modules.admin.AdminPurgeBanned;
-import com.griefcraft.modules.admin.AdminQuery;
-import com.griefcraft.modules.admin.AdminRebuild;
-import com.griefcraft.modules.admin.AdminReload;
-import com.griefcraft.modules.admin.AdminRemove;
-import com.griefcraft.modules.admin.AdminReport;
-import com.griefcraft.modules.admin.AdminVersion;
-import com.griefcraft.modules.admin.AdminView;
-import com.griefcraft.modules.admin.BaseAdminModule;
+import com.griefcraft.model.*;
+import com.griefcraft.modules.admin.*;
 import com.griefcraft.modules.confirm.ConfirmModule;
 import com.griefcraft.modules.create.CreateModule;
 import com.griefcraft.modules.credits.CreditsModule;
@@ -105,14 +73,8 @@ import com.griefcraft.scripting.event.LWCReloadEvent;
 import com.griefcraft.scripting.event.LWCSendLocaleEvent;
 import com.griefcraft.sql.Database;
 import com.griefcraft.sql.PhysDB;
-import com.griefcraft.util.Colors;
-import com.griefcraft.util.DatabaseThread;
-import com.griefcraft.util.ProtectionFinder;
-import com.griefcraft.util.Statistics;
-import com.griefcraft.util.StringUtil;
-import com.griefcraft.util.UUIDRegistry;
+import com.griefcraft.util.*;
 import com.griefcraft.util.config.Configuration;
-import com.griefcraft.util.locale.LocaleUtil;
 import com.griefcraft.util.matchers.DoubleChestMatcher;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -128,20 +90,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-//import org.mcstats.Metrics;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
+//import org.mcstats.Metrics;
 
 public class LWC {
 
@@ -204,11 +159,13 @@ public class LWC {
      * Protection configuration cache
      */
     private final Map<String, String> protectionConfigurationCache = new HashMap<String, String>();
+    private boolean fastHoppers;
 
     public LWC(LWCPlugin plugin) {
         this.plugin = plugin;
         LWC.instance = this;
         configuration = Configuration.load("core.yml");
+        fastHoppers = configuration.getBoolean("optional.fastHopperProtection", false);
         protectionCache = new ProtectionCache(this);
         backupManager = new BackupManager();
         moduleLoader = new ModuleLoader(this);
@@ -1551,7 +1508,7 @@ public class LWC {
             currency = new EssentialsCurrency();
         }
 
-        plugin.getUpdater().init();
+        // plugin.getUpdater().init();
 
         log("Connecting to " + Database.DefaultType);
         try {
@@ -1896,6 +1853,7 @@ public class LWC {
         plugin.loadLocales();
         protectionConfigurationCache.clear();
         Configuration.reload();
+        fastHoppers = configuration.getBoolean("optional.fastHopperProtection", false);
         moduleLoader.dispatchEvent(new LWCReloadEvent());
     }
 
@@ -2043,4 +2001,10 @@ public class LWC {
         return !configuration.getBoolean("core.disableHistory", false);
     }
 
+    /**
+     * @return true if we should use the fast-hopper lite protection
+     */
+    public boolean useFastHopperProtection() {
+        return fastHoppers;
+    }
 }

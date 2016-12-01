@@ -9,3 +9,6 @@ bin
 .project
 *.txt
 *.bat
+core/target/
+modules/economy/target/
+out/

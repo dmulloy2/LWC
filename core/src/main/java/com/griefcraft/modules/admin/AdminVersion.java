@@ -33,7 +33,6 @@ import com.griefcraft.lwc.LWCInfo;
 import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCCommandEvent;
 import com.griefcraft.util.Colors;
-import com.griefcraft.util.Updater;
 import com.griefcraft.util.Version;
 import org.bukkit.command.CommandSender;
 
@@ -60,11 +59,11 @@ public class AdminVersion extends JavaModule {
         // we have the right command
         event.setCancelled(true);
 
-        Updater updater = lwc.getPlugin().getUpdater();
+        // Updater updater = lwc.getPlugin().getUpdater();
         // force a reload of the latest versions
         String pluginColor = Colors.Green;
         Version currVersion = LWCInfo.FULL_VERSION;
-        Version latestVersion = updater.getLatestVersion();
+        Version latestVersion = LWCInfo.FULL_VERSION;
 
         if (latestVersion.newerThan(currVersion)) {
             pluginColor = Colors.Red;

@@ -71,6 +71,10 @@ optional:
     # If protections limits will be enabled (defaults to unlimited protections)
     useProtectionLimits: true
 
+    # Disable hopper move checks if one hopper moves to another one
+    # This means that hoppers can pull items out of protected hoppers! (But not chests etc.)
+    fastHopperProtection: false
+
 # Database information for LWC
 database:
 
