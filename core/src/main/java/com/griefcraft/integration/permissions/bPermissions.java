@@ -33,7 +33,7 @@ public class bPermissions extends SuperPermsPermissions {
     /**
      * bPermissions permission handler
      */
-    /*private WorldManager handler;
+    /* private WorldManager handler;
 
     public bPermissions() {
         Plugin plugin = Bukkit.getServer().getPluginManager().getPlugin("bPermissions");
@@ -53,6 +53,6 @@ public class bPermissions extends SuperPermsPermissions {
         User user = world.getUser(player.getName());
 
         return new ArrayList<String>(user.getGroupsAsString());
-    }*/
+    } */
 
 }

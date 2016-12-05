@@ -29,16 +29,21 @@
 package com.griefcraft.sql;
 
 
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import org.bukkit.Bukkit;
+
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.scripting.ModuleException;
 import com.griefcraft.util.Statistics;
 import com.griefcraft.util.config.Configuration;
-import org.bukkit.Bukkit;
-
-import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 public abstract class Database {
 
@@ -206,6 +211,9 @@ public abstract class Database {
             return false;
         }
 
+        // load the database jar
+        ClassLoader classLoader = Bukkit.getServer().getClass().getClassLoader();
+
         // What class should we try to load?
         String className = "";
         if (currentType == Type.MySQL) {
@@ -213,9 +221,6 @@ public abstract class Database {
         } else {
             className = "org.sqlite.JDBC";
         }
-
-        // load the database jar
-        ClassLoader classLoader = Bukkit.getServer().getClass().getClassLoader();
 
         // Load the driver class
         Driver driver = (Driver) classLoader.loadClass(className).newInstance();
