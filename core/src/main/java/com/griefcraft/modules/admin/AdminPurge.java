@@ -32,7 +32,10 @@ import com.griefcraft.lwc.LWC;
 import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCCommandEvent;
 import com.griefcraft.util.StringUtil;
+import com.griefcraft.util.UUIDRegistry;
 import org.bukkit.command.CommandSender;
+
+import java.util.UUID;
 
 public class AdminPurge extends JavaModule {
 
@@ -65,12 +68,15 @@ public class AdminPurge extends JavaModule {
         boolean shouldRemoveBlocks = args[1].endsWith("remove");
         String players = StringUtil.join(args, shouldRemoveBlocks ? 2 : 1);
 
-        for (String toRemove : players.split(" ")) {
-            if (toRemove.contains("'")) continue; // bad me
+        for (String toRemoveName : players.split(" ")) {
+            if (toRemoveName.contains("'")) continue; // bad me
+
+            UUID toRemoveUuid = UUIDRegistry.getUUID(toRemoveName); // This will return a UUID associated with a name, or a UUID object for a UUID string
+            String toRemoveUuidString = toRemoveUuid.toString();
 
             // Remove all of them
-            lwc.fastRemoveProtectionsByPlayer(sender, toRemove, shouldRemoveBlocks);
-            lwc.sendLocale(sender, "protection.admin.purge.finalize", "player", toRemove);
+            lwc.fastRemoveProtectionsByPlayer(sender, toRemoveUuidString, shouldRemoveBlocks);
+            lwc.sendLocale(sender, "protection.admin.purge.finalize", "player", toRemoveName);
         }
 
         // reload the cache!

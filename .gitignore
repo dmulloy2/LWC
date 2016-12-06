@@ -4,6 +4,8 @@
 *.iml
 world
 bin
+out
+target
 
 .classpath
 .project

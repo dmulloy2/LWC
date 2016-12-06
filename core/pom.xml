@@ -54,8 +54,8 @@
         <!-- Plugin Support -->
         <dependency>
             <groupId>net.milkbowl.vault</groupId>
-            <artifactId>Vault</artifactId>
-            <version>1.6.6</version>
+            <artifactId>VaultAPI</artifactId>
+            <version>1.6</version>
             <scope>compile</scope>
         </dependency>
         <!-- <dependency>
