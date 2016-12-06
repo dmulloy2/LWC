@@ -205,10 +205,16 @@ public class LWC {
      */
     private final Map<String, String> protectionConfigurationCache = new HashMap<String, String>();
 
+    /**
+     * Whether fast-hopper-protection is enabled
+     */
+    private boolean fastHoppers;
+
     public LWC(LWCPlugin plugin) {
         this.plugin = plugin;
         LWC.instance = this;
         configuration = Configuration.load("core.yml");
+        fastHoppers = configuration.getBoolean("optional.fastHopperProtection", false);
         protectionCache = new ProtectionCache(this);
         backupManager = new BackupManager();
         moduleLoader = new ModuleLoader(this);
@@ -1896,6 +1902,7 @@ public class LWC {
         plugin.loadLocales();
         protectionConfigurationCache.clear();
         Configuration.reload();
+        fastHoppers = configuration.getBoolean("optional.fastHopperProtection", false);
         moduleLoader.dispatchEvent(new LWCReloadEvent());
     }
 
@@ -2043,4 +2050,11 @@ public class LWC {
         return !configuration.getBoolean("core.disableHistory", false);
     }
 
+    /**
+     * @return true if fast hopper protection is enabled
+     */
+    public boolean useFastHopperProtection()
+    {
+        return fastHoppers;
+    }
 }
