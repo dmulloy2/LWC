@@ -61,6 +61,7 @@ optional:
 
     # Blocks that cannot be placed around someone else's protection. This is most useful
     blacklistedBlocks:
+    - 154
     - 166
 
     # Players that are blocked from destroying any blocks protected by LWC. Mainly useful for MCPC
@@ -70,6 +71,11 @@ optional:
 
     # If protections limits will be enabled (defaults to unlimited protections)
     useProtectionLimits: true
+
+    # Disable protection checks for items being moved out of a hopper (destination doesn't matter)
+    # This applies to a hopper pushing items into a protected chest, or a hopper pulling from a
+    # protected hopper, but doesn't apply to a hopper pulling from a protected chest
+    fastHopperProtection: false
 
 # Database information for LWC
 database:
@@ -162,6 +168,8 @@ protections:
         chest:
             enabled: true
             autoRegister: private
+        trapped_chest:
+            enabled: true
         furnace:
             enabled: true
             autoRegister: private
