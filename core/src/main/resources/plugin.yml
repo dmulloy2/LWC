@@ -1,8 +1,9 @@
 name: LWC
 main: com.griefcraft.lwc.LWCPlugin
-version: ${project.version}
+version: 4.5.1-SNAPSHOT
 website: http://griefcraft.com
 author: Hidendra
+authors: [dmulloy2,Minebench,trainphreak]
 description: >
              Inventory protection & management utilizing SQLite or MySQL as its backend
              Other blocks can also be protected individually, if configured.
