@@ -160,7 +160,7 @@ protections:
     readonly-remove: false
 
     # Current and custom protections are defined here by their block name or id
-    # If you use the Id, you MUST encase it in quotes, for example (chest):
+    # If you use the ID or wildcards, you MUST encase it in quotes, for example (chest):
     # '54':
     #     enabled: true
     # The custom protection must also have enabled: true under it for it to function in the world
@@ -179,7 +179,7 @@ protections:
         sign:
             enabled: true
             autoRegister: private
-        *_door:
+        "*_door":
             enabled: true
         trap_door:
             enabled: true
@@ -187,9 +187,9 @@ protections:
             enabled: true
         fence_gate:
             enabled: true
-        *_fence_gate:
+        "*_fence_gate":
             enabled: true
-        *_shulker_box:
+        "*_shulker_box":
             enabled: true
 
 modes:
