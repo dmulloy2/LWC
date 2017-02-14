@@ -165,17 +165,29 @@ public class DropTransferModule extends JavaModule {
 
         Block block = world.getBlockAt(protection.getX(), protection.getY(), protection.getZ());
         Map<Integer, ItemStack> remaining = lwc.depositItems(block, itemStack);
+        Map<Integer, ItemStack> forceDrop = null;
 
         if (remaining.size() > 0) {
-            lwc.sendLocale(player, "lwc.dropxfer.chestfull");
-
             for (ItemStack temp : remaining.values()) {
-                bPlayer.getInventory().addItem(temp);
+                // There will only ever be one item to check...
+                forceDrop = bPlayer.getInventory().addItem(temp);
             }
         }
 
+        if (forceDrop != null && forceDrop.size() > 0) {
+            lwc.sendLocale(player, "lwc.dropxfer.bothfull");
+            for (ItemStack drop : remaining.values()) {
+                item.setItemStack(drop);
+            }
+        } else {
+            if (remaining.size() > 0) {
+                lwc.sendLocale(player, "lwc.dropxfer.chestfull");
+            }
+            
+            item.remove();
+        }
+
         bPlayer.updateInventory(); // if they're in the chest and dropping items, this is required
-        item.remove();
     }
 
     @Override
