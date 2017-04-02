@@ -160,7 +160,7 @@ public class FreeModule extends JavaModule {
             Runnable callback = new Runnable() {
                 public void run() {
                     // Get all of the player's protections
-                    for (Protection protection : lwc.getPhysicalDatabase().loadProtectionsByPlayer(player.getName())) {
+                    for (Protection protection : lwc.getPhysicalDatabase().loadProtectionsByPlayer(player.getUniqueId().toString())) {
                         // Remove the protection
                         protection.remove();
                     }
