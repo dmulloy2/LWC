@@ -163,10 +163,12 @@ public class PhysDB extends Database {
      */
     public int getProtectionCount(String player) {
         int count = 0;
+        
+        UUID uuid = UUIDRegistry.getUUID(player);
 
         try {
             PreparedStatement statement = prepare("SELECT COUNT(*) as count FROM " + prefix + "protections WHERE owner = ?");
-            statement.setString(1, player);
+            statement.setString(1, uuid != null ? uuid.toString() : player);
 
             ResultSet set = statement.executeQuery();
 
