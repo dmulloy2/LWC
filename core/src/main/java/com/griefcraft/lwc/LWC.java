@@ -113,6 +113,7 @@ import com.griefcraft.modules.modes.DropTransferModule;
 import com.griefcraft.modules.modes.NoSpamModule;
 import com.griefcraft.modules.modes.PersistModule;
 import com.griefcraft.modules.modify.ModifyModule;
+import com.griefcraft.modules.modify.ModifyAllModule;
 import com.griefcraft.modules.owners.OwnersModule;
 import com.griefcraft.modules.pluginsupport.Towny;
 import com.griefcraft.modules.pluginsupport.WorldGuard;
@@ -1625,6 +1626,7 @@ public class LWC {
         registerModule(new LimitsModule());
         registerModule(new CreateModule());
         registerModule(new ModifyModule());
+        registerModule(new ModifyAllModule());
         registerModule(new DestroyModule());
         registerModule(new FreeModule());
         registerModule(new InfoModule());

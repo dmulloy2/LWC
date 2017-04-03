@@ -37,6 +37,9 @@ commands:
   cmodify:
     description: Modify an existing private protection.
     usage: /<command> <Modifications>
+  cmodifyall:
+    description: Modify all existing private protections.
+    usage: /<command> <Modifications>
   cunlock:
     description: Unlock a password-protected protection.
     usage: /<command> <password>
