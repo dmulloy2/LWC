@@ -47,179 +47,179 @@ import org.bukkit.entity.Player;
 
 public class ModifyAllModule extends JavaModule {
 
-    @Override
-    public void onCommand(LWCCommandEvent event) {
-        if (event.isCancelled()) {
-            return;
-        }
+	@Override
+	public void onCommand(LWCCommandEvent event) {
+		if (event.isCancelled()) {
+			return;
+		}
 
-        if (!event.hasFlag("modifyall")) {
-            return;
-        }
+		if (!event.hasFlag("modifyall")) {
+			return;
+		}
 
-        final LWC lwc = event.getLWC();
-        final CommandSender sender = event.getSender();
-        final String[] args = event.getArgs();
-        event.setCancelled(true);
+		final LWC lwc = event.getLWC();
+		final CommandSender sender = event.getSender();
+		final String[] args = event.getArgs();
+		event.setCancelled(true);
 
-        if (!lwc.hasPlayerPermission(sender, "lwc.modify")) {
-            lwc.sendLocale(sender, "protection.accessdenied");
-            return;
-        }
+		if (!lwc.hasPlayerPermission(sender, "lwc.modify")) {
+			lwc.sendLocale(sender, "protection.accessdenied");
+			return;
+		}
 
-        if (args.length < 1) {
-            lwc.sendLocale(sender, "help.modify");
-            return;
-        }
+		if (args.length < 1) {
+			lwc.sendLocale(sender, "help.modify");
+			return;
+		}
 
-        if (!(sender instanceof Player)) {
-            lwc.sendLocale(sender, "lwc.onlyrealplayers");
-            return;
-        }
-        final LWCPlayer player = lwc.wrapPlayer(sender);
-        
-        final Iterator<Protection> prots = lwc.getPhysicalDatabase()
-                .loadProtectionsByPlayer(player.getUniqueId().toString())
-                .iterator();
+		if (!(sender instanceof Player)) {
+			lwc.sendLocale(sender, "lwc.onlyrealplayers");
+			return;
+		}
+		final LWCPlayer player = lwc.wrapPlayer(sender);
 
-        // Figure out if it matches a protection type outside of the runnable to avoid unnecessary re-processing
-        boolean prot = false;
-        Protection.Type protectionType = null;
-        
-    	try {
-            protectionType = Protection.Type.matchType(args[0]);
-            if (protectionType != null) {
-            	prot = true;
-            }
-    	} catch (IllegalArgumentException e) {
-            // It's normal for this to be thrown if nothing was matched
-        }
-    	
-    	// Redeclare as final to use inside the runnable
-    	final boolean innerProt = prot;
-    	final Protection.Type innerProtType = protectionType;
-    	
-        // Begin and run the runnable every tick, so that it can process protections in batches
-        Bukkit.getScheduler().runTask(lwc.getPlugin(), new Runnable() {
-            private int total = 0;
-        	public void run() {
-		    	int count = 0;
-                // Iterate all of the player's protections
-                while (prots.hasNext()) {
-                    Protection protection = prots.next();
-                    if (innerProt) {
-                    	// Matches a protection type
-	                    protection.setType(innerProtType);
-	                    protection.save();
-		                protection.removeCache(); 
-		            	LWC.getInstance().getProtectionCache().addProtection(protection);
-	                    count++;
-	                    total++;
+		final Iterator<Protection> prots = lwc.getPhysicalDatabase()
+				.loadProtectionsByPlayer(player.getUniqueId().toString())
+				.iterator();
 
-	                    // If it's being passworded, we need to set the password
-	                    if (innerProtType == Protection.Type.PASSWORD) {
-	                        String password = StringUtil.join(args, 1);
-	                        protection.setPassword(LWC.getInstance().encrypt(password));
-	                    }
-		            } else {
-		            	// Not a protection type, test for other arguments
-		            	for (String value : args) {
-			                boolean remove = false;
-			                boolean isAdmin = false;
-			                Permission.Type type = Permission.Type.PLAYER;
-	
-			                // Gracefully ignore id
-			                if (value.startsWith("id:")) {
-			                    continue;
-			                }
-	
-			                if (value.startsWith("-")) {
-			                    remove = true;
-			                    value = value.substring(1);
-			                }
-	
-			                if (value.startsWith("@")) {
-			                    isAdmin = true;
-			                    value = value.substring(1);
-			                }
-	
-			                if (value.toLowerCase().startsWith("p:")) {
-			                    type = Permission.Type.PLAYER;
-			                    value = value.substring(2);
-			                }
-	
-			                if (value.toLowerCase().startsWith("g:")) {
-			                    type = Permission.Type.GROUP;
-			                    value = value.substring(2);
-			                }
-	
-			                if (value.toLowerCase().startsWith("t:")) {
-			                    type = Permission.Type.TOWN;
-			                    value = value.substring(2);
-			                }
-	
-			                if (value.toLowerCase().startsWith("town:")) {
-			                    type = Permission.Type.TOWN;
-			                    value = value.substring(5);
-			                }
-	
-			                if (value.toLowerCase().startsWith("item:")) {
-			                    type = Permission.Type.ITEM;
-			                    value = value.substring(5);
-			                }
-	
-			                if (value.toLowerCase().startsWith("r:")) {
-			                    type = Permission.Type.REGION;
-			                    value = value.substring(2);
-			                }
-	
-			                if (value.toLowerCase().startsWith("region:")) {
-			                    type = Permission.Type.REGION;
-			                    value = value.substring(7);
-			                }
-	
-			                if (value.trim().isEmpty()) {
-			                    continue;
-			                }
-	
-			                // If it's a player, convert it to UUID
-			                if (type == Permission.Type.PLAYER) {
-			                    UUID uuid = UUIDRegistry.getUUID(value);
-	
-			                    if (uuid != null) {
-			                        value = uuid.toString();
-			                    }
-			                }
-	
-			                if (!remove) {
-			                    Permission permission = new Permission(value, type);
-			                    permission.setAccess(isAdmin ? Permission.Access.ADMIN : Permission.Access.PLAYER);
-	
-			                    // add it to the protection and queue it to be saved
-			                    protection.addPermission(permission);
-			                    protection.save();
-			                    count++;
-			                    total++;
-			                } else {
-			                    protection.removePermissions(value, type);
-			                    protection.save();
-			                    count++;
-			                    total++;
-			                }
-			                protection.removeCache(); 
-			            	LWC.getInstance().getProtectionCache().addProtection(protection);
-			            }
-			        }
-                    // Only do 10 at a time; re-schedule this runnable for next tick and exit
-                    if (count > 10) {
-                        Bukkit.getScheduler().runTask(lwc.getPlugin(), this);
-                        return;
-                    }
-		        }
-                // No more protections to process; we're finished!
-		        sender.sendMessage("§6Modified " + total + " protections");
-        	}
-        });
-        player.removeAllActions();
-   }
+		// Figure out if it matches a protection type outside of the runnable to avoid unnecessary re-processing
+		boolean prot = false;
+		Protection.Type protectionType = null;
+
+		try {
+			protectionType = Protection.Type.matchType(args[0]);
+			if (protectionType != null) {
+				prot = true;
+			}
+		} catch (IllegalArgumentException e) {
+			// It's normal for this to be thrown if nothing was matched
+		}
+
+		// Redeclare as final to use inside the runnable
+		final boolean innerProt = prot;
+		final Protection.Type innerProtType = protectionType;
+
+		// Begin and run the runnable every tick, so that it can process protections in batches
+		Bukkit.getScheduler().runTask(lwc.getPlugin(), new Runnable() {
+			private int total = 0;
+			public void run() {
+				int count = 0;
+				// Iterate all of the player's protections
+				while (prots.hasNext()) {
+					Protection protection = prots.next();
+					if (innerProt) {
+						// Matches a protection type
+						protection.setType(innerProtType);
+						protection.save();
+						protection.removeCache(); 
+						LWC.getInstance().getProtectionCache().addProtection(protection);
+						count++;
+						total++;
+
+						// If it's being passworded, we need to set the password
+						if (innerProtType == Protection.Type.PASSWORD) {
+							String password = StringUtil.join(args, 1);
+							protection.setPassword(LWC.getInstance().encrypt(password));
+						}
+					} else {
+						// Not a protection type, test for other arguments
+						for (String value : args) {
+							boolean remove = false;
+							boolean isAdmin = false;
+							Permission.Type type = Permission.Type.PLAYER;
+
+							// Gracefully ignore id
+							if (value.startsWith("id:")) {
+								continue;
+							}
+
+							if (value.startsWith("-")) {
+								remove = true;
+								value = value.substring(1);
+							}
+
+							if (value.startsWith("@")) {
+								isAdmin = true;
+								value = value.substring(1);
+							}
+
+							if (value.toLowerCase().startsWith("p:")) {
+								type = Permission.Type.PLAYER;
+								value = value.substring(2);
+							}
+
+							if (value.toLowerCase().startsWith("g:")) {
+								type = Permission.Type.GROUP;
+								value = value.substring(2);
+							}
+
+							if (value.toLowerCase().startsWith("t:")) {
+								type = Permission.Type.TOWN;
+								value = value.substring(2);
+							}
+
+							if (value.toLowerCase().startsWith("town:")) {
+								type = Permission.Type.TOWN;
+								value = value.substring(5);
+							}
+
+							if (value.toLowerCase().startsWith("item:")) {
+								type = Permission.Type.ITEM;
+								value = value.substring(5);
+							}
+
+							if (value.toLowerCase().startsWith("r:")) {
+								type = Permission.Type.REGION;
+								value = value.substring(2);
+							}
+
+							if (value.toLowerCase().startsWith("region:")) {
+								type = Permission.Type.REGION;
+								value = value.substring(7);
+							}
+
+							if (value.trim().isEmpty()) {
+								continue;
+							}
+
+							// If it's a player, convert it to UUID
+							if (type == Permission.Type.PLAYER) {
+								UUID uuid = UUIDRegistry.getUUID(value);
+
+								if (uuid != null) {
+									value = uuid.toString();
+								}
+							}
+
+							if (!remove) {
+								Permission permission = new Permission(value, type);
+								permission.setAccess(isAdmin ? Permission.Access.ADMIN : Permission.Access.PLAYER);
+
+								// add it to the protection and queue it to be saved
+								protection.addPermission(permission);
+								protection.save();
+								count++;
+								total++;
+							} else {
+								protection.removePermissions(value, type);
+								protection.save();
+								count++;
+								total++;
+							}
+							protection.removeCache(); 
+							LWC.getInstance().getProtectionCache().addProtection(protection);
+						}
+					}
+					// Only do 10 at a time; re-schedule this runnable for next tick and exit
+					if (count > 10) {
+						Bukkit.getScheduler().runTask(lwc.getPlugin(), this);
+						return;
+					}
+				}
+				// No more protections to process; we're finished!
+				sender.sendMessage("§6Modified " + total + " protections");
+			}
+		});
+		player.removeAllActions();
+	}
 }
