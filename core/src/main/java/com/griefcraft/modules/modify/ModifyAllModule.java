@@ -217,7 +217,7 @@ public class ModifyAllModule extends JavaModule {
 					}
 				}
 				// No more protections to process; we're finished!
-				sender.sendMessage("§6Modified " + total + " protections");
+				lwc.sendLocale(sender, "protection.modifyall", "total", total);
 			}
 		});
 		player.removeAllActions();
