@@ -9,6 +9,7 @@
     <version>4.6.0-SNAPSHOT</version>
 
     <properties>
+        <spigot.version>1.12-R0.1-SNAPSHOT</spigot.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -44,7 +45,7 @@
                         </goals>
                         <configuration>
                             <tasks>
-                                <echo>Building LWC Version=[${project.version}] MC=[${minecraft.version}]</echo>
+                                <echo>Building LWC Version ${project.version} for Spigot ${spigot.version}</echo>
                             </tasks>
                         </configuration>
                     </execution>
@@ -52,7 +53,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>2.7</version>
+                <version>2.8.2</version>
                 <configuration>
                     <skip>true</skip>
                 </configuration>
@@ -60,19 +61,14 @@
         </plugins>
     </build>
 
-	<!-- Replace this with my DM -->
     <distributionManagement>
         <repository>
-            <id>mcstats.releases</id>
-            <name>mcstats.org releases</name>
-            <url>http://repo.mcstats.org/content/repositories/releases/</url>
+            <id>dmulloy2-releases</id>
+            <url>http://repo.dmulloy2.net/nexus/repository/releases/</url>
         </repository>
-
         <snapshotRepository>
-            <id>mcstats.snapshots</id>
-            <name>mcstats.org snapshots</name>
-            <url>http://repo.mcstats.org/content/repositories/snapshots/</url>
+            <id>dmulloy2-snapshots</id>
+            <url>http://repo.dmulloy2.net/nexus/repository/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
-
 </project>

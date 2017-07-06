@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2011 Tyler Blair. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are
@@ -25,17 +25,16 @@
  * authors and contributors and should not be interpreted as representing official policies,
  * either expressed or implied, of anybody else.
  */
-
 package com.griefcraft.bukkit;
 
+import java.util.logging.Logger;
 
 import com.griefcraft.lwc.EconomyModule;
 import com.griefcraft.lwc.LWC;
+
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.logging.Logger;
 
 public class LWCEconomyPlugin extends JavaPlugin {
     private Logger logger = Logger.getLogger("LWC-Economy");
@@ -44,6 +43,10 @@ public class LWCEconomyPlugin extends JavaPlugin {
      * The LWC object
      */
     private LWC lwc;
+    public LWC getLWC() { return lwc; }
+
+    private boolean initialized;
+    public boolean isInitialized() { return initialized; }
 
     /**
      * Our server listener, listens for iConomy to be loaded
@@ -60,17 +63,18 @@ public class LWCEconomyPlugin extends JavaPlugin {
     public void init() {
         LWC.getInstance().getModuleLoader().registerModule(this, new EconomyModule(this));
         log("Hooked into LWC!");
+        this.initialized = true;
     }
 
     public void onEnable() {
         Plugin lwc = getServer().getPluginManager().getPlugin("LWC");
 
         if (lwc != null) {
+            this.lwc = LWC.getInstance();
             init();
         } else {
             // register the server listener
             getServer().getPluginManager().registerEvents(serverListener, this);
-
             log("Waiting for LWC to be enabled...");
         }
     }
@@ -82,5 +86,4 @@ public class LWCEconomyPlugin extends JavaPlugin {
     private void log(String message) {
         logger.info("LWC-Economy: " + message);
     }
-
 }
