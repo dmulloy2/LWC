@@ -142,20 +142,11 @@ public abstract class Database {
      * Ping the database to keep the connection alive
      */
     public void pingDatabase() {
-        Statement stmt = null;
-        try {
-            stmt = connection.createStatement();
+        try (Statement stmt = connection.createStatement()) {
             stmt.executeQuery("SELECT 1;");
-            stmt.close();
-        } catch (SQLException e) {
+        } catch (SQLException ex) {
             log("Keepalive packet (ping) failed!");
-            e.printStackTrace();
-        } finally {
-            try {
-                if (stmt != null) {
-                    stmt.close();
-                }
-            } catch (SQLException e) { }
+            ex.printStackTrace();
         }
     }
 

@@ -129,12 +129,7 @@ import com.griefcraft.scripting.event.LWCReloadEvent;
 import com.griefcraft.scripting.event.LWCSendLocaleEvent;
 import com.griefcraft.sql.Database;
 import com.griefcraft.sql.PhysDB;
-import com.griefcraft.util.Colors;
-import com.griefcraft.util.DatabaseThread;
-import com.griefcraft.util.ProtectionFinder;
-import com.griefcraft.util.Statistics;
-import com.griefcraft.util.StringUtil;
-import com.griefcraft.util.UUIDRegistry;
+import com.griefcraft.util.*;
 import com.griefcraft.util.config.Configuration;
 import com.griefcraft.util.locale.LocaleUtil;
 import com.griefcraft.util.matchers.DoubleChestMatcher;
@@ -977,16 +972,20 @@ public class LWC {
 
         sender.sendMessage("Loading protections via STREAM mode");
 
-        try {
-            Statement resultStatement = physicalDatabase.getConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        try (Closer closer = new Closer()) {
+            Statement resultStatement = closer.register(physicalDatabase.getConnection()
+                                                                        .createStatement(ResultSet.TYPE_FORWARD_ONLY,
+                                                                                         ResultSet.CONCUR_READ_ONLY));
 
             if (physicalDatabase.getType() == Database.Type.MySQL) {
                 resultStatement.setFetchSize(Integer.MIN_VALUE);
             }
 
             String prefix = physicalDatabase.getPrefix();
-            ResultSet result = resultStatement.executeQuery("SELECT id, owner, type, x, y, z, data, blockId, world, password, date, last_accessed FROM " + prefix + "protections" + where);
 
+            ResultSet result = closer.register(resultStatement.executeQuery(
+                    "SELECT id, owner, type, x, y, z, data, blockId, world, password, date, last_accessed FROM " +
+                    prefix + "protections" + where));
             while (result.next()) {
                 Protection protection = physicalDatabase.resolveProtection(result);
                 World world = protection.getBukkitWorld();
@@ -1022,19 +1021,15 @@ public class LWC {
 
                 completed++;
             }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
 
-            // Close the streaming statement
-            result.close();
-            resultStatement.close();
+        // flush all of the queries
+        fullRemoveProtections(sender, toRemove);
 
-            // flush all of the queries
-            fullRemoveProtections(sender, toRemove);
-
-            if (shouldRemoveBlocks) {
-                removeBlocks(sender, removeBlocks);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if (shouldRemoveBlocks) {
+            removeBlocks(sender, removeBlocks);
         }
 
         return completed;
@@ -1046,7 +1041,7 @@ public class LWC {
      * @param sender
      * @param toRemove
      */
-    private void fullRemoveProtections(CommandSender sender, List<Integer> toRemove) throws SQLException {
+    private void fullRemoveProtections(CommandSender sender, List<Integer> toRemove) {
         StringBuilder deleteProtectionsQuery = new StringBuilder();
         StringBuilder deleteHistoryQuery = new StringBuilder();
         int total = toRemove.size();
@@ -1058,36 +1053,41 @@ public class LWC {
         // the database prefix
         String prefix = getPhysicalDatabase().getPrefix();
 
-        // create the statement to use
-        Statement statement = getPhysicalDatabase().getConnection().createStatement();
+        try (Closer closer = new Closer()) {
+            // create the statement to use
+            Statement statement = closer.register(getPhysicalDatabase().getConnection().createStatement());
 
-        while (iter.hasNext()) {
-            int protectionId = iter.next();
+            while (iter.hasNext()) {
+                int protectionId = iter.next();
 
-            if (count % 10000 == 0) {
-                deleteProtectionsQuery.append("DELETE FROM ").append(prefix).append("protections WHERE id IN (").append(protectionId);
-                deleteHistoryQuery.append("UPDATE ").append(prefix).append("history SET status = " + History.Status.INACTIVE.ordinal() + " WHERE protectionId IN(").append(protectionId);
-            } else {
-                deleteProtectionsQuery.append(",").append(protectionId);
-                deleteHistoryQuery.append(",").append(protectionId);
+                if (count % 10000 == 0) {
+                    deleteProtectionsQuery.append("DELETE FROM ").append(prefix).append("protections WHERE id IN (")
+                                          .append(protectionId);
+                    deleteHistoryQuery.append("UPDATE ").append(prefix)
+                                      .append("history SET status = " + History.Status.INACTIVE.ordinal() +
+                                              " WHERE protectionId IN(").append(protectionId);
+                } else {
+                    deleteProtectionsQuery.append(",").append(protectionId);
+                    deleteHistoryQuery.append(",").append(protectionId);
+                }
+
+                if (count % 10000 == 9999 || count == (total - 1)) {
+                    deleteProtectionsQuery.append(")");
+                    deleteHistoryQuery.append(")");
+                    statement.executeUpdate(deleteProtectionsQuery.toString());
+                    statement.executeUpdate(deleteHistoryQuery.toString());
+                    deleteProtectionsQuery.setLength(0);
+                    deleteHistoryQuery.setLength(0);
+
+                    sender.sendMessage(Colors.Green + "REMOVED " + (count + 1) + " / " + total);
+                }
+
+                count++;
+                physicalDatabase.decrementProtectionCount();
             }
-
-            if (count % 10000 == 9999 || count == (total - 1)) {
-                deleteProtectionsQuery.append(")");
-                deleteHistoryQuery.append(")");
-                statement.executeUpdate(deleteProtectionsQuery.toString());
-                statement.executeUpdate(deleteHistoryQuery.toString());
-                deleteProtectionsQuery.setLength(0);
-                deleteHistoryQuery.setLength(0);
-
-                sender.sendMessage(Colors.Green + "REMOVED " + (count + 1) + " / " + total);
-            }
-
-            count++;
-            physicalDatabase.decrementProtectionCount();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
-
-        statement.close();
     }
 
     /**

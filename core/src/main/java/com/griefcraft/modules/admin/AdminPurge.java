@@ -33,6 +33,8 @@ import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCCommandEvent;
 import com.griefcraft.util.StringUtil;
 import com.griefcraft.util.UUIDRegistry;
+
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 import java.util.UUID;
@@ -72,6 +74,11 @@ public class AdminPurge extends JavaModule {
             if (toRemoveName.contains("'")) continue; // bad me
 
             UUID toRemoveUuid = UUIDRegistry.getUUID(toRemoveName); // This will return a UUID associated with a name, or a UUID object for a UUID string
+            if (toRemoveUuid == null) {
+                sender.sendMessage(ChatColor.RED + "Player \"" + toRemoveName + "\" not found!");
+                continue;
+            }
+
             String toRemoveUuidString = toRemoveUuid.toString();
 
             // Remove all of them
