@@ -122,7 +122,7 @@ public abstract class Database {
     /**
      * If the high level statement cache should be used. If this is false, already cached statements are ignored
      */
-    private boolean useStatementCache = true;
+    private boolean useStatementCache = false;
 
     public Database() {
         currentType = DefaultType;
@@ -333,7 +333,9 @@ public abstract class Database {
                 preparedStatement = connection.prepareStatement(sql);
             }
 
-            statementCache.put(sql, preparedStatement);
+            if (useStatementCache) {
+                statementCache.put(sql, preparedStatement);
+            }
             Statistics.addQuery();
 
             return preparedStatement;
