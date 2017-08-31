@@ -1254,10 +1254,10 @@ public class PhysDB extends Database {
      * @param player
      */
     public void invalidateHistory(String player) {
-       try (PreparedStatement statement = prepare("UPDATE " + prefix + "history SET status = ? WHERE Lower(player) = Lower(?)")) {
+        try {
+           PreparedStatement statement = prepare("UPDATE " + prefix + "history SET status = ? WHERE Lower(player) = Lower(?)");
            statement.setInt(1, History.Status.INACTIVE.ordinal());
            statement.setString(2, player);
-
            statement.executeUpdate();
        } catch (SQLException e) {
            printException(e);

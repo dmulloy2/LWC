@@ -37,9 +37,14 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.bukkit.Bukkit;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.scripting.ModuleException;
 import com.griefcraft.util.Statistics;
@@ -90,7 +95,19 @@ public abstract class Database {
      * <p/>
      * Since SQLite JDBC doesn't cache them.. we do it ourselves :S
      */
-    private Map<String, PreparedStatement> statementCache = new HashMap<String, PreparedStatement>();
+    private Cache<String, PreparedStatement> statementCache = CacheBuilder
+            .newBuilder()
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .removalListener(notif -> closeQuietly((PreparedStatement) notif.getValue()))
+            .build();
+
+    private void closeQuietly(AutoCloseable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (Exception ignored) { }
+    }
 
     /**
      * The connection to the database
@@ -122,7 +139,7 @@ public abstract class Database {
     /**
      * If the high level statement cache should be used. If this is false, already cached statements are ignored
      */
-    private boolean useStatementCache = false;
+    private boolean useStatementCache = true;
 
     public Database() {
         currentType = DefaultType;
@@ -243,7 +260,7 @@ public abstract class Database {
     }
 
     public void dispose() {
-        statementCache.clear();
+        statementCache.invalidateAll();
 
         try {
             if (connection != null) {
@@ -319,31 +336,33 @@ public abstract class Database {
             return null;
         }
 
-        if (useStatementCache && statementCache.containsKey(sql)) {
-            Statistics.addQuery();
-            return statementCache.get(sql);
-        }
-
         try {
-            PreparedStatement preparedStatement;
-
-            if (returnGeneratedKeys) {
-                preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            } else {
-                preparedStatement = connection.prepareStatement(sql);
-            }
-
             if (useStatementCache) {
-                statementCache.put(sql, preparedStatement);
+                Statistics.addQuery();
+                return statementCache.get(sql, () -> prepareInternal(sql, returnGeneratedKeys));
             }
-            Statistics.addQuery();
 
-            return preparedStatement;
-        } catch (SQLException e) {
-            e.printStackTrace();
+            return prepareInternal(sql, returnGeneratedKeys);
+        } catch (Throwable ex) {
+            throw new RuntimeException("Failed to prepare statement " + sql, ex);
+        }
+    }
+
+    private PreparedStatement prepareInternal(String sql, boolean returnGeneratedKeys) throws SQLException {
+        PreparedStatement preparedStatement;
+
+        if (returnGeneratedKeys) {
+            preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        } else {
+            preparedStatement = connection.prepareStatement(sql);
         }
 
-        return null;
+        if (useStatementCache) {
+            statementCache.put(sql, preparedStatement);
+        }
+
+        Statistics.addQuery();
+        return preparedStatement;
     }
 
     /**
