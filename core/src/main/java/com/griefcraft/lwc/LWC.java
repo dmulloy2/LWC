@@ -201,11 +201,17 @@ public class LWC {
      */
     private boolean fastHoppers;
 
+    /**
+     * Whether alternative-hopper-protection is enabled
+     */
+    private boolean alternativeHoppers;
+
     public LWC(LWCPlugin plugin) {
         this.plugin = plugin;
         LWC.instance = this;
         configuration = Configuration.load("core.yml");
         fastHoppers = configuration.getBoolean("optional.fastHopperProtection", false);
+        alternativeHoppers = configuration.getBoolean("optional.alternativeHopperProtection", false);
         protectionCache = new ProtectionCache(this);
         backupManager = new BackupManager();
         moduleLoader = new ModuleLoader(this);
@@ -1816,6 +1822,7 @@ public class LWC {
         protectionConfigurationCache.clear();
         Configuration.reload();
         fastHoppers = configuration.getBoolean("optional.fastHopperProtection", false);
+        alternativeHoppers = configuration.getBoolean("optional.alternativeHopperProtection", false);
         moduleLoader.dispatchEvent(new LWCReloadEvent());
     }
 
@@ -1966,8 +1973,14 @@ public class LWC {
     /**
      * @return true if fast hopper protection is enabled
      */
-    public boolean useFastHopperProtection()
-    {
+    public boolean useFastHopperProtection() {
         return fastHoppers;
+    }
+
+    /**
+     * @return true if alternative hopper protection is enabled
+     */
+    public boolean useAlternativeHopperProtection() {
+        return alternativeHoppers;
     }
 }
