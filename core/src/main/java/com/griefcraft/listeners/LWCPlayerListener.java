@@ -46,6 +46,7 @@ import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Hopper;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -84,6 +85,10 @@ public class LWCPlayerListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onMoveItem(InventoryMoveItemEvent event) {
+        if (plugin.getLWC().useAlternativeHopperProtection()
+                && !(event.getSource().getHolder() instanceof HopperMinecart || event.getDestination().getHolder() instanceof HopperMinecart))
+            return;
+
         if (plugin.getLWC().useFastHopperProtection() && event.getSource().getHolder() instanceof Hopper)
             return;
 
