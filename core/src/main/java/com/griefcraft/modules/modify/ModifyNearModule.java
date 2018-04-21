@@ -115,7 +115,8 @@ public class ModifyNearModule extends JavaModule {
 				// Iterate all of the player's protections
 				while (prots.hasNext()) {
 					Protection protection = prots.next();
-					if (protection.getLocation().distance(((Player) sender).getLocation()) <= radius) {
+					if (Bukkit.getWorld(protection.getWorld()).equals(((Player) sender).getWorld()) &&
+							protection.getLocation().distance(((Player) sender).getLocation()) <= radius) {
 						if (innerProt) {
 							// Matches a protection type
 							protection.setType(innerProtType);
