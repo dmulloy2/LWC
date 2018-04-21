@@ -1551,67 +1551,6 @@ public class LWC {
 
         // We are now done loading!
         moduleLoader.loadAll();
-
-        // Should we try metrics?
-        if (!configuration.getBoolean("optional.optOut", false)) {
-            try {
-                Metrics metrics = new Metrics(plugin);
-
-                // Create a line graph
-                Metrics.Graph lineGraph = metrics.createGraph("Protections");
-
-                // Add the total protections plotter
-                lineGraph.addPlotter(new Metrics.Plotter("Total") {
-                    @Override
-                    public int getValue() {
-                        return physicalDatabase.getProtectionCount();
-                    }
-                });
-
-                // Create a pie graph for individual protections
-                Metrics.Graph pieGraph = metrics.createGraph("Protection percentages");
-
-                for (final Protection.Type type : Protection.Type.values()) {
-                    if (type == Protection.Type.RESERVED1 || type == Protection.Type.RESERVED2) {
-                        continue;
-                    }
-
-                    // Create the plotter
-                    Metrics.Plotter plotter = new Metrics.Plotter(StringUtil.capitalizeFirstLetter(type.toString()) + " Protections") {
-                        @Override
-                        public int getValue() {
-                            return physicalDatabase.getProtectionCount(type);
-                        }
-                    };
-
-                    // Add it to both graphs
-                    lineGraph.addPlotter(plotter);
-                    pieGraph.addPlotter(plotter);
-                }
-
-                // Locale
-                Metrics.Graph langGraph = metrics.createGraph("Locale");
-                langGraph.addPlotter(new Metrics.Plotter(LocaleUtil.iso639ToEnglish(configuration.getString("core.locale", "en"))) {
-                    @Override
-                    public int getValue() {
-                        return 1;
-                    }
-                });
-
-                // Database type
-                Metrics.Graph databaseGraph = metrics.createGraph("Database Engine");
-                databaseGraph.addPlotter(new Metrics.Plotter(physicalDatabase.getType().toString()) {
-                    @Override
-                    public int getValue() {
-                        return 1;
-                    }
-                });
-
-                metrics.start();
-            } catch (IOException e) {
-                log(e.getMessage());
-            }
-        }
     }
 
     /**
