@@ -36,15 +36,15 @@ import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCCommandEvent;
 import com.griefcraft.util.StringUtil;
 import com.griefcraft.util.UUIDRegistry;
-
-import java.util.Iterator;
-import java.util.UUID;
-
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class ModifyAllModule extends JavaModule {
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.UUID;
+
+public class ModifyNearModule extends JavaModule {
 
 	@Override
 	public void onCommand(LWCCommandEvent event) {
@@ -52,13 +52,14 @@ public class ModifyAllModule extends JavaModule {
 			return;
 		}
 
-		if (!event.hasFlag("modifyall")) {
+		if (!event.hasFlag("mn", "modifynear")) {
 			return;
 		}
 
 		final LWC lwc = event.getLWC();
 		final CommandSender sender = event.getSender();
-		final String[] args = event.getArgs();
+		final String[] _args = event.getArgs();
+		final String[] args = Arrays.copyOfRange(_args, 1, _args.length);
 		event.setCancelled(true);
 
 		if (!lwc.hasPlayerPermission(sender, "lwc.modify")) {
@@ -66,7 +67,15 @@ public class ModifyAllModule extends JavaModule {
 			return;
 		}
 
-		if (args.length < 1) {
+		if (_args.length < 2) {
+			lwc.sendLocale(sender, "help.modify");
+			return;
+		}
+
+		int radius;
+		try {
+			radius = Integer.parseInt(_args[0]);
+		} catch (NumberFormatException ex) {
 			lwc.sendLocale(sender, "help.modify");
 			return;
 		}
@@ -106,107 +115,109 @@ public class ModifyAllModule extends JavaModule {
 				// Iterate all of the player's protections
 				while (prots.hasNext()) {
 					Protection protection = prots.next();
-					if (innerProt) {
-						// Matches a protection type
-						protection.setType(innerProtType);
-						protection.save();
-						protection.removeCache(); 
-						LWC.getInstance().getProtectionCache().addProtection(protection);
-						count++;
-						total++;
-
-						// If it's being passworded, we need to set the password
-						if (innerProtType == Protection.Type.PASSWORD) {
-							String password = StringUtil.join(args, 1);
-							protection.setPassword(LWC.getInstance().encrypt(password));
-						}
-					} else {
-						// Not a protection type, test for other arguments
-						for (String value : args) {
-							boolean remove = false;
-							boolean isAdmin = false;
-							Permission.Type type = Permission.Type.PLAYER;
-
-							// Gracefully ignore id
-							if (value.startsWith("id:")) {
-								continue;
-							}
-
-							if (value.startsWith("-")) {
-								remove = true;
-								value = value.substring(1);
-							}
-
-							if (value.startsWith("@")) {
-								isAdmin = true;
-								value = value.substring(1);
-							}
-
-							if (value.toLowerCase().startsWith("p:")) {
-								type = Permission.Type.PLAYER;
-								value = value.substring(2);
-							}
-
-							if (value.toLowerCase().startsWith("g:")) {
-								type = Permission.Type.GROUP;
-								value = value.substring(2);
-							}
-
-							if (value.toLowerCase().startsWith("t:")) {
-								type = Permission.Type.TOWN;
-								value = value.substring(2);
-							}
-
-							if (value.toLowerCase().startsWith("town:")) {
-								type = Permission.Type.TOWN;
-								value = value.substring(5);
-							}
-
-							if (value.toLowerCase().startsWith("item:")) {
-								type = Permission.Type.ITEM;
-								value = value.substring(5);
-							}
-
-							if (value.toLowerCase().startsWith("r:")) {
-								type = Permission.Type.REGION;
-								value = value.substring(2);
-							}
-
-							if (value.toLowerCase().startsWith("region:")) {
-								type = Permission.Type.REGION;
-								value = value.substring(7);
-							}
-
-							if (value.trim().isEmpty()) {
-								continue;
-							}
-
-							// If it's a player, convert it to UUID
-							if (type == Permission.Type.PLAYER) {
-								UUID uuid = UUIDRegistry.getUUID(value);
-
-								if (uuid != null) {
-									value = uuid.toString();
-								}
-							}
-
-							if (!remove) {
-								Permission permission = new Permission(value, type);
-								permission.setAccess(isAdmin ? Permission.Access.ADMIN : Permission.Access.PLAYER);
-
-								// add it to the protection and queue it to be saved
-								protection.addPermission(permission);
-								protection.save();
-								count++;
-								total++;
-							} else {
-								protection.removePermissions(value, type);
-								protection.save();
-								count++;
-								total++;
-							}
-							protection.removeCache(); 
+					if (protection.getLocation().distance(((Player) sender).getLocation()) <= radius) {
+						if (innerProt) {
+							// Matches a protection type
+							protection.setType(innerProtType);
+							protection.save();
+							protection.removeCache();
 							LWC.getInstance().getProtectionCache().addProtection(protection);
+							count++;
+							total++;
+
+							// If it's being passworded, we need to set the password
+							if (innerProtType == Protection.Type.PASSWORD) {
+								String password = StringUtil.join(args, 1);
+								protection.setPassword(LWC.getInstance().encrypt(password));
+							}
+						} else {
+							// Not a protection type, test for other arguments
+							for (String value : args) {
+								boolean remove = false;
+								boolean isAdmin = false;
+								Permission.Type type = Permission.Type.PLAYER;
+
+								// Gracefully ignore id
+								if (value.startsWith("id:")) {
+									continue;
+								}
+
+								if (value.startsWith("-")) {
+									remove = true;
+									value = value.substring(1);
+								}
+
+								if (value.startsWith("@")) {
+									isAdmin = true;
+									value = value.substring(1);
+								}
+
+								if (value.toLowerCase().startsWith("p:")) {
+									type = Permission.Type.PLAYER;
+									value = value.substring(2);
+								}
+
+								if (value.toLowerCase().startsWith("g:")) {
+									type = Permission.Type.GROUP;
+									value = value.substring(2);
+								}
+
+								if (value.toLowerCase().startsWith("t:")) {
+									type = Permission.Type.TOWN;
+									value = value.substring(2);
+								}
+
+								if (value.toLowerCase().startsWith("town:")) {
+									type = Permission.Type.TOWN;
+									value = value.substring(5);
+								}
+
+								if (value.toLowerCase().startsWith("item:")) {
+									type = Permission.Type.ITEM;
+									value = value.substring(5);
+								}
+
+								if (value.toLowerCase().startsWith("r:")) {
+									type = Permission.Type.REGION;
+									value = value.substring(2);
+								}
+
+								if (value.toLowerCase().startsWith("region:")) {
+									type = Permission.Type.REGION;
+									value = value.substring(7);
+								}
+
+								if (value.trim().isEmpty()) {
+									continue;
+								}
+
+								// If it's a player, convert it to UUID
+								if (type == Permission.Type.PLAYER) {
+									UUID uuid = UUIDRegistry.getUUID(value);
+
+									if (uuid != null) {
+										value = uuid.toString();
+									}
+								}
+
+								if (!remove) {
+									Permission permission = new Permission(value, type);
+									permission.setAccess(isAdmin ? Permission.Access.ADMIN : Permission.Access.PLAYER);
+
+									// add it to the protection and queue it to be saved
+									protection.addPermission(permission);
+									protection.save();
+									count++;
+									total++;
+								} else {
+									protection.removePermissions(value, type);
+									protection.save();
+									count++;
+									total++;
+								}
+								protection.removeCache();
+								LWC.getInstance().getProtectionCache().addProtection(protection);
+							}
 						}
 					}
 					// Only do 10 at a time; re-schedule this runnable for next tick and exit

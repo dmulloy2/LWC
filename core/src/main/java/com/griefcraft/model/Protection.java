@@ -37,6 +37,7 @@ import com.griefcraft.util.StringUtil;
 import com.griefcraft.util.TimeUtil;
 import com.griefcraft.util.UUIDRegistry;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -698,6 +699,10 @@ public class Protection {
 
     public Type getType() {
         return type;
+    }
+
+    public Location getLocation() {
+        return new Location(Bukkit.getWorld(world), x, y, z);
     }
 
     public String getWorld() {

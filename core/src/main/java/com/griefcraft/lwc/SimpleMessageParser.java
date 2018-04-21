@@ -93,7 +93,7 @@ public class SimpleMessageParser implements MessageParser {
             }
 
             // Apply aliases
-            String[] aliasvars = new String[]{"cprivate", "cpublic", "cpassword", "cmodify", "cunlock", "cinfo", "cremove"};
+            String[] aliasvars = new String[]{"cprivate", "cpublic", "cpassword", "cmodify", "cmodifyall", "cmodifynear", "cunlock", "cinfo", "cremove"};
 
             // apply command name modification depending on menu style
             for (String alias : aliasvars) {
