@@ -56,7 +56,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.mcstats.Metrics;
 
 import com.griefcraft.cache.ProtectionCache;
 import com.griefcraft.integration.ICurrency;

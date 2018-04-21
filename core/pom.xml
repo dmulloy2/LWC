@@ -65,14 +65,6 @@
             <version>6.1</version>
             <scope>provided</scope>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>com.herocraftonline.heroes</groupId>
-            <artifactId>Heroes</artifactId>
-            <version>1.5.5</version>
-            <scope>provided</scope>
-        </dependency>
-        -->
 
 		<!-- Find repos for these -->
         <dependency>
@@ -132,33 +124,6 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <artifactSet>
-                                <includes>
-                                    <include>org.mcstats.bukkit:metrics</include>
-                                </includes>
-                            </artifactSet>
-                            <relocations>
-                                <relocation>
-                                    <pattern>org.mcstats</pattern>
-                                    <shadedPattern>com.griefcraft.util.mcstats</shadedPattern>
-                                </relocation>
-                            </relocations>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>
