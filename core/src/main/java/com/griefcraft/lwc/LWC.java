@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.griefcraft.modules.copy.CopyModule;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
@@ -1572,6 +1573,7 @@ public class LWC {
         registerModule(new LimitsV2());
         registerModule(new LimitsModule());
         registerModule(new CreateModule());
+        registerModule(new CopyModule());
         registerModule(new ModifyModule());
         registerModule(new ModifyAllModule());
         registerModule(new DestroyModule());

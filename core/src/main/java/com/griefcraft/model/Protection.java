@@ -494,6 +494,26 @@ public class Protection {
 
         return false;
     }
+    /**
+     * Set the flags of a protection
+     *
+     * @param newFlags
+     * @return
+     */
+    public boolean setFlags(Map<Flag.Type, Flag> newFlags) {
+        if (removed || newFlags == null) {
+            return false;
+        }
+
+        removeFlags();
+
+        for (Map.Entry<Flag.Type, Flag> entry : newFlags.entrySet())
+        {
+            flags.put(entry.getKey(), entry.getValue());
+        }
+        modified = true;
+        return true;
+    }
 
     /**
      * Remove a flag from the protection
@@ -507,6 +527,20 @@ public class Protection {
         }
 
         flags.remove(flag.getType());
+        this.modified = true;
+    }
+
+    /**
+     * Remove all flags from the protection
+     *
+     * @return
+     */
+    public void removeFlags() {
+        if (removed) {
+            return;
+        }
+
+        flags.clear();
         this.modified = true;
     }
 
@@ -550,7 +584,7 @@ public class Protection {
     }
 
     /**
-     * Add an permission to the protection
+     * Add a permission to the protection
      *
      * @param permission
      */
@@ -564,6 +598,24 @@ public class Protection {
 
         // now we can safely add it
         permissions.add(permission);
+        modified = true;
+    }
+
+    /**
+     * Add permissions to the protection
+     *
+     * @param newPermissions
+     */
+    public void setPermissions(List<Permission> newPermissions) {
+        if (removed || newPermissions == null) {
+            return;
+        }
+
+        removeAllPermissions();
+
+        for (Permission permission : newPermissions) {
+            permissions.add(permission);
+        }
         modified = true;
     }
 

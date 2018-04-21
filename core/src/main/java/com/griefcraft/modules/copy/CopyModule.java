@@ -26,7 +26,7 @@
  * either expressed or implied, of anybody else.
  */
 
-package com.griefcraft.modules.info;
+package com.griefcraft.modules.copy;
 
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.model.*;
@@ -34,15 +34,11 @@ import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCBlockInteractEvent;
 import com.griefcraft.scripting.event.LWCCommandEvent;
 import com.griefcraft.scripting.event.LWCProtectionInteractEvent;
-import com.griefcraft.util.StringUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.Set;
-
-public class InfoModule extends JavaModule {
+public class CopyModule extends JavaModule {
 
     @Override
     public void onProtectionInteract(LWCProtectionInteractEvent event) {
@@ -50,57 +46,66 @@ public class InfoModule extends JavaModule {
             return;
         }
 
-        if (!event.hasAction("info")) {
+        if (!(event.hasAction("copy") || event.hasAction("paste"))) {
             return;
         }
 
         LWC lwc = event.getLWC();
         Protection protection = event.getProtection();
         Player player = event.getPlayer();
+        LWCPlayer lwcPlayer = lwc.wrapPlayer(player);
         event.setResult(Result.CANCEL);
 
-        String type = lwc.getPlugin().getMessageParser().parseMessage(protection.typeToString().toLowerCase());
-
-        Set<Flag.Type> flags = protection.getFlags().keySet();
-        StringBuilder flagStr = new StringBuilder();
-        int nFlags = flags.size();
-        for(Flag.Type flag : flags) {
-            flagStr.append(StringUtil.capitalizeFirstLetter(flag.name()));
-            if(--nFlags > 0) {
-                flagStr.append(", ");
-            }
-        }
-
-        lwc.sendLocale(player, "lwc.info", "owner", protection.getFormattedOwnerPlayerName(), "type", type, "flags", flagStr.toString());
-
         if (event.canAdmin()) {
-            if (protection.getType() == Protection.Type.PRIVATE || protection.getType() == Protection.Type.DONATION) {
-                lwc.sendLocale(player, "lwc.acl", "size", protection.getPermissions().size());
-                int index = 0;
-                for (Permission permission : protection.getPermissions()) {
-                    if (index >= 9) {
-                        break;
+            if (event.hasAction("copy")) {
+                Protection copy = new Protection();
+                if (protection.getPermissions() != null) {
+                    copy.setPermissions(protection.getPermissions());
+                }
+                if (protection.getFlags() != null) {
+                    copy.setFlags(protection.getFlags());
+                }
+                if (protection.getPassword() != null) {
+                    copy.setPassword(protection.getPassword());
+                }
+                if (protection.getType() != null) {
+                    copy.setType(protection.getType());
+                }
+
+                Action action = new PasteAction(copy);
+                action.setName("paste");
+                action.setPlayer(lwcPlayer);
+
+                lwcPlayer.removeAllActions();
+                lwcPlayer.addAction(action);
+
+                lwc.sendLocale(player, "protection.copy.paste");
+            } else if (event.hasAction("paste")) {
+                Action action = lwcPlayer.getAction("paste");
+
+                // They were!
+                if (action instanceof PasteAction) {
+                    Protection paste = action.getProtection();
+
+                    if (paste.getPermissions() != null) {
+                        protection.setPermissions(paste.getPermissions());
                     }
-
-                    player.sendMessage(permission.toString());
-                    index ++;
+                    if (paste.getFlags() != null) {
+                        protection.setFlags(paste.getFlags());
+                    }
+                    if (paste.getPassword() != null) {
+                        protection.setPassword(paste.getPassword());
+                    }
+                    if (paste.getType() != null) {
+                        protection.setType(paste.getType());
+                    }
+                    protection.save();
+                    lwc.sendLocale(player, "protection.copy.finalize");
                 }
 
-                if (index == 0) {
-                    lwc.sendLocale(player, "lwc.acl.empty");
-                } else if (index >= 9) {
-                    lwc.sendLocale(player, "lwc.acl.limitreached");
-                }
-
-                player.sendMessage("");
+                lwc.removeModes(player);
             }
         }
-
-        if (lwc.isAdmin(player)) {
-            lwc.sendLocale(player, "protection.interact.info.raw", "raw", protection.toString());
-        }
-
-        lwc.removeModes(player);
     }
 
     @Override
@@ -109,7 +114,7 @@ public class InfoModule extends JavaModule {
             return;
         }
 
-        if (!event.hasAction("info")) {
+        if (!event.hasAction("copy") || !event.hasAction("paste")) {
             return;
         }
 
@@ -128,13 +133,12 @@ public class InfoModule extends JavaModule {
             return;
         }
 
-        if (!event.hasFlag("i", "info")) {
+        if (!event.hasFlag("copy")) {
             return;
         }
 
         LWC lwc = event.getLWC();
         CommandSender sender = event.getSender();
-        String[] args = event.getArgs();
 
         if (!(sender instanceof Player)) {
             return;
@@ -142,38 +146,22 @@ public class InfoModule extends JavaModule {
 
         event.setCancelled(true);
 
-        if (!lwc.hasPlayerPermission(sender, "lwc.info")) {
+        if (!lwc.hasPlayerPermission(sender, "lwc.copy")) {
             lwc.sendLocale(sender, "protection.accessdenied");
             return;
         }
 
         LWCPlayer player = lwc.wrapPlayer(sender);
-        String type = "info";
 
-        if (args.length > 0) {
-            type = args[0].toLowerCase();
-        }
+        Action action = new Action();
+        action.setName("copy");
+        action.setPlayer(player);
 
-        if (type.equals("info")) {
-            Action action = new Action();
-            action.setName("info");
-            action.setPlayer(player);
+        player.removeAllActions();
+        player.addAction(action);
 
-            player.removeAllActions();
-            player.addAction(action);
+        lwc.sendLocale(player, "protection.copy.copy");
 
-            lwc.sendLocale(player, "protection.info.finalize");
-        } else if (type.equals("history")) {
-            Action action = new Action();
-            action.setName("history");
-            action.setData("0");
-            action.setPlayer(player);
-
-            player.removeAllActions();
-            player.addAction(action);
-
-            lwc.sendLocale(player, "protection.info.finalize");
-        }
     }
 
 }

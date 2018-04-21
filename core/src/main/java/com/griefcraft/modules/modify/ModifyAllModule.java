@@ -34,7 +34,6 @@ import com.griefcraft.model.Permission;
 import com.griefcraft.model.Protection;
 import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCCommandEvent;
-import com.griefcraft.util.Colors;
 import com.griefcraft.util.StringUtil;
 import com.griefcraft.util.UUIDRegistry;
 
