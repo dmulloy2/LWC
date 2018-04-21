@@ -55,10 +55,6 @@ optional:
     # Block IDs to automatically blocks from /lwc admin purge, /lwc admin expire, etc.
     exemptBlocks: []
 
-    # Opt out of the optional metrics tooling
-    # Available online: http://metrics.griefcraft.com/plugin/LWC/
-    optOut: false
-
     # Blocks that cannot be placed around someone else's protection. This is most useful
     blacklistedBlocks:
     - 154

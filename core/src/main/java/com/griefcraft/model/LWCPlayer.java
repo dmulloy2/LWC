@@ -103,9 +103,6 @@ public class LWCPlayer implements CommandSender {
      * @param player
      */
     public static void removePlayer(Player player) {
-        LWCPlayer lwcPlayer = getPlayer(player);
-
-        // uncache them
         playerCache.remove(player);
     }
 

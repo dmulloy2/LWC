@@ -349,10 +349,14 @@ public class LWCBlockListener implements Listener {
             // it's blacklisted, check for a protected chest
             for (Protection protection : lwc.findAdjacentProtectionsOnAllSides(block)) {
                 if (protection != null) {
-                    if (!lwc.canAccessProtection(player, protection) || (protection.getType() == Protection.Type.DONATION && !lwc.canAdminProtection(player, protection))) {
-                        // they can't access the protection ..
-                        event.setCancelled(true);
-                        return;
+                    if(!protection.isBlockInWorld()) {
+                        protection.remove();
+                    } else {
+                        if (!lwc.canAccessProtection(player, protection) || (protection.getType() == Protection.Type.DONATION && !lwc.canAdminProtection(player, protection))) {
+                            // they can't access the protection ..
+                            event.setCancelled(true);
+                            return;
+                        }
                     }
                 }
             }
@@ -426,16 +430,7 @@ public class LWCBlockListener implements Listener {
         Protection current = lwc.findProtection(block.getLocation());
         if (current != null) {
             if (!current.isBlockInWorld()) {
-                // Corrupted protection
-                lwc.log("Removing corrupted protection: " + current);
                 current.remove();
-            } else {
-                if (current.getProtectionFinder() != null) {
-                    current.getProtectionFinder().fullMatchBlocks();
-                    lwc.getProtectionCache().addProtection(current);
-                }
-
-                return;
             }
         }
 

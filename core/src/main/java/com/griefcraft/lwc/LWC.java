@@ -130,7 +130,6 @@ import com.griefcraft.sql.Database;
 import com.griefcraft.sql.PhysDB;
 import com.griefcraft.util.*;
 import com.griefcraft.util.config.Configuration;
-import com.griefcraft.util.locale.LocaleUtil;
 import com.griefcraft.util.matchers.DoubleChestMatcher;
 
 public class LWC {
@@ -564,13 +563,13 @@ public class LWC {
     public List<Protection> findAdjacentProtectionsOnAllSides(Block block, Block... ignore) {
         BlockFace[] faces = new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN};
         List<Block> ignoreList = Arrays.asList(ignore);
-        List<Protection> found = new ArrayList<Protection>();
+        List<Protection> found = new ArrayList<>();
 
         for (BlockFace face : faces) {
             Protection protection;
             Block adjacentBlock = block.getRelative(face);
 
-            if (!ignoreList.contains(adjacentBlock.getLocation()) && (protection = findProtection(adjacentBlock.getLocation())) != null) {
+            if (!ignoreList.contains(adjacentBlock) && (protection = findProtection(adjacentBlock.getLocation())) != null) {
                 found.add(protection);
             }
         }
@@ -1490,6 +1489,10 @@ public class LWC {
         // Add the wildcards last so it can be overriden
         names.add("*");
         names.add(material.getId() + ":*");
+
+        if (materialName.contains("_")) {
+            names.add("*_" + materialName.substring(materialName.indexOf("_") + 1));
+        }
 
         String value = configuration.getString("protections." + node);
 
