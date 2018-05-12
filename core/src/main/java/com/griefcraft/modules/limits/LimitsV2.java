@@ -28,6 +28,7 @@
 
 package com.griefcraft.modules.limits;
 
+import com.griefcraft.bukkit.EntityBlock;
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCCommandEvent;
@@ -36,8 +37,8 @@ import com.griefcraft.scripting.event.LWCReloadEvent;
 import com.griefcraft.util.Colors;
 import com.griefcraft.util.config.Configuration;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
@@ -84,6 +85,11 @@ public class LimitsV2 extends JavaModule {
      */
     private final Map<String, Material> materialCache = new HashMap<String, Material>();
 
+    /**
+     * A map mapping string representations of entity types to their EntityType counterpart
+     */
+    private final Map<String, EntityType> entityCache = new HashMap<>();
+
     {
         for (Material material : Material.values()) {
             String materialName = LWC.normalizeMaterialName(material);
@@ -91,11 +97,15 @@ public class LimitsV2 extends JavaModule {
             // add the name & the block id
             materialCache.put(materialName, material);
             materialCache.put(material.getId() + "", material);
-            materialCache.put(materialName, material);
 
             if (!materialName.equals(material.toString().toLowerCase())) {
                 materialCache.put(material.toString().toLowerCase(), material);
             }
+        }
+
+        for (EntityType entityType : EntityType.values()) {
+            entityCache.put(entityType.toString().toLowerCase(), entityType);
+            entityCache.put(String.valueOf(EntityBlock.ENTITY_BLOCK_ID + entityType.getTypeId()), entityType);
         }
     }
 
@@ -114,10 +124,26 @@ public class LimitsV2 extends JavaModule {
          * Get the player's protection count that should be used with this limit
          *
          * @param player
-         * @param material
          * @return
          */
-        public abstract int getProtectionCount(Player player, Material material);
+        public abstract int getProtectionCount(Player player);
+
+        /**
+         * Get the name of the type that this limit represents
+
+         * @return
+         */
+        public abstract String getTypeName();
+
+        /**
+         * Check whether or not this limit accepts a certain type
+         *
+         * @param type
+         * @return
+         */
+        public boolean accepts(String type) {
+            return getTypeName().equalsIgnoreCase(type);
+        }
 
         /**
          * @return
@@ -134,8 +160,13 @@ public class LimitsV2 extends JavaModule {
         }
 
         @Override
-        public int getProtectionCount(Player player, Material material) {
+        public int getProtectionCount(Player player) {
             return LWC.getInstance().getPhysicalDatabase().getProtectionCount(player.getName());
+        }
+
+        @Override
+        public String getTypeName() {
+            return "default";
         }
 
     }
@@ -153,8 +184,13 @@ public class LimitsV2 extends JavaModule {
         }
 
         @Override
-        public int getProtectionCount(Player player, Material material) {
+        public int getProtectionCount(Player player) {
             return LWC.getInstance().getPhysicalDatabase().getProtectionCount(player.getName(), material.getId());
+        }
+
+        @Override
+        public String getTypeName() {
+            return material.toString();
         }
 
         /**
@@ -166,6 +202,37 @@ public class LimitsV2 extends JavaModule {
 
     }
 
+    public final class EntityLimit extends Limit {
+
+        /**
+         * The block material to limit
+         */
+        private final EntityType entityType;
+
+        public EntityLimit( EntityType entityType, int limit) {
+            super(limit);
+            this.entityType = entityType;
+        }
+
+        @Override
+        public int getProtectionCount(Player player) {
+            return LWC.getInstance().getPhysicalDatabase().getProtectionCount(player.getName(), EntityBlock.ENTITY_BLOCK_ID + entityType.getTypeId());
+        }
+
+        @Override
+        public String getTypeName() {
+            return entityType.toString();
+        }
+
+        /**
+         * @return
+         */
+        public EntityType getEntityType() {
+            return entityType;
+        }
+
+    }
+
     public final class SignLimit extends Limit {
 
         public SignLimit(int limit) {
@@ -173,10 +240,21 @@ public class LimitsV2 extends JavaModule {
         }
 
         @Override
-        public int getProtectionCount(Player player, Material material) {
+        public int getProtectionCount(Player player) {
             LWC lwc = LWC.getInstance();
             return lwc.getPhysicalDatabase().getProtectionCount(player.getName(), Material.SIGN_POST.getId())
                     + lwc.getPhysicalDatabase().getProtectionCount(player.getName(), Material.WALL_SIGN.getId());
+        }
+
+        @Override
+        public boolean accepts(String type) {
+            return Material.SIGN_POST.toString().equalsIgnoreCase(type)
+                    || Material.WALL_SIGN.toString().equalsIgnoreCase(type);
+        }
+
+        @Override
+        public String getTypeName() {
+            return "sign";
         }
 
     }
@@ -204,9 +282,14 @@ public class LimitsV2 extends JavaModule {
 
         LWC lwc = event.getLWC();
         Player player = event.getPlayer();
-        Block block = event.getBlock();
+        String typeName;
+        if (event.getBlock() instanceof EntityBlock) {
+            typeName = ((EntityBlock) event.getBlock()).getEntityType().toString();
+        } else {
+            typeName = event.getBlock().getType().toString();
+        }
 
-        if (hasReachedLimit(player, block.getType())) {
+        if (hasReachedLimit(player, typeName)) {
             lwc.sendLocale(player, "protection.exceeded");
             event.setCancelled(true);
         }
@@ -291,27 +374,20 @@ public class LimitsV2 extends JavaModule {
             String colour = Colors.Yellow;
 
             if (target != null) {
-                Material material = null;
-
-                if (limit instanceof BlockLimit) {
-                    material = ((BlockLimit) limit).getMaterial();
-                } else if (limit instanceof SignLimit) {
-                    material = Material.SIGN_POST;
-                }
-
-                boolean reachedLimit = hasReachedLimit(target, material);
+                boolean reachedLimit = hasReachedLimit(target, limit.getTypeName());
                 colour = reachedLimit ? Colors.Red : Colors.Green;
             }
 
+            String currentProtected = target != null ? (Integer.toString(limit.getProtectionCount(target)) + "/") : "";
             if (limit instanceof DefaultLimit) {
-                String currentProtected = target != null ? (Integer.toString(limit.getProtectionCount(target, null)) + "/") : "";
                 sender.sendMessage("Default: " + colour + currentProtected + stringLimit);
             } else if (limit instanceof BlockLimit) {
                 BlockLimit blockLimit = (BlockLimit) limit;
-                String currentProtected = target != null ? (Integer.toString(limit.getProtectionCount(target, blockLimit.getMaterial())) + "/") : "";
-                sender.sendMessage(lwc.materialToString(blockLimit.getMaterial()) + ": " + colour + currentProtected + stringLimit);
+                sender.sendMessage(LWC.materialToString(blockLimit.getMaterial()) + ": " + colour + currentProtected + stringLimit);
+            } else if (limit instanceof EntityLimit) {
+                EntityLimit entityLimit = (EntityLimit) limit;
+                sender.sendMessage(LWC.entityToString(entityLimit.getEntityType()) + ": " + colour + currentProtected + stringLimit);
             } else if (limit instanceof SignLimit) {
-                String currentProtected = target != null ? (Integer.toString(limit.getProtectionCount(target, null)) + "/") : "";
                 sender.sendMessage("Sign: " + colour + currentProtected + stringLimit);
             } else {
                 sender.sendMessage(limit.getClass().getSimpleName() + ": " + Colors.Yellow + stringLimit);
@@ -324,11 +400,11 @@ public class LimitsV2 extends JavaModule {
      * Checks if a player has reached their protection limit
      *
      * @param player
-     * @param material the material type the player has interacted with
+     * @param type the material type the player has interacted with
      * @return
      */
-    public boolean hasReachedLimit(Player player, Material material) {
-        Limit limit = getEffectiveLimit(player, material);
+    public boolean hasReachedLimit(Player player, String type) {
+        Limit limit = getEffectiveLimit(player, type);
 
         // if they don't have a limit it's not possible to reach it ^^
         //  ... but if it's null, what the hell did the server owner do?
@@ -340,7 +416,7 @@ public class LimitsV2 extends JavaModule {
         int neverPassThisNumber = limit.getLimit();
 
         // get the amount of protections the player has
-        int protections = limit.getProtectionCount(player, material);
+        int protections = limit.getProtectionCount(player);
 
         return protections >= neverPassThisNumber;
     }
@@ -384,12 +460,15 @@ public class LimitsV2 extends JavaModule {
                 limits.add(new SignLimit(count));
             } else {
                 Material material = materialCache.get(matchName);
-
-                if (material == null) {
-                    continue;
+                if (material != null) {
+                    limits.add(new BlockLimit(material, count));
                 }
 
-                limits.add(new BlockLimit(material, count));
+                EntityType entityType = entityCache.get(matchName);
+                if (entityType != null) {
+                    limits.add(new EntityLimit(entityType, count));
+                }
+
             }
         }
 
@@ -464,11 +543,11 @@ public class LimitsV2 extends JavaModule {
      * Get the player's effective limit that should take precedence
      *
      * @param player
-     * @param material
+     * @param string
      * @return
      */
-    public Limit getEffectiveLimit(Player player, Material material) {
-        return getEffectiveLimit(getPlayerLimits(player), material);
+    public Limit getEffectiveLimit(Player player, String string) {
+        return getEffectiveLimit(getPlayerLimits(player), string);
     }
 
     /**
@@ -528,10 +607,10 @@ public class LimitsV2 extends JavaModule {
      * Gets the material's effective limit that should take precedence
      *
      * @param limits
-     * @param material
+     * @param type
      * @return Limit object if one is found otherwise NULL
      */
-    private Limit getEffectiveLimit(List<Limit> limits, Material material) {
+    private Limit getEffectiveLimit(List<Limit> limits, String type) {
         if (limits == null) {
             return null;
         }
@@ -543,17 +622,8 @@ public class LimitsV2 extends JavaModule {
             // Record the default limit if found
             if (limit instanceof DefaultLimit) {
                 defaultLimit = limit;
-            } else if (limit instanceof SignLimit) {
-                if (material == Material.WALL_SIGN || material == Material.SIGN_POST) {
-                    return limit;
-                }
-            } else if (limit instanceof BlockLimit) {
-                BlockLimit blockLimit = (BlockLimit) limit;
-
-                // If it's the appropriate material we can return immediately
-                if (blockLimit.getMaterial() == material) {
-                    return blockLimit;
-                }
+            } else if (limit.accepts(type)) {
+                return limit;
             }
         }
 
@@ -614,24 +684,15 @@ public class LimitsV2 extends JavaModule {
             } else if (key.equalsIgnoreCase("sign")) {
                 limits.add(new SignLimit(limit));
             } else {
-                // attempt to resolve it as a block id
-                int blockId = -1;
-
-                try {
-                    blockId = Integer.parseInt(key);
-                } catch (NumberFormatException e) { }
-
-                // resolve the material
-                Material material;
-
-                if (blockId >= 0) {
-                    material = Material.getMaterial(blockId);
-                } else {
-                    material = Material.getMaterial(key.toUpperCase());
-                }
-
+                // resolve the type
+                Material material = materialCache.get(key);
                 if (material != null) {
                     limits.add(new BlockLimit(material, limit));
+                }
+
+                EntityType entityType = entityCache.get(key);
+                if (entityType != null) {
+                    limits.add(new EntityLimit(entityType, limit));
                 }
             }
         }
@@ -644,8 +705,7 @@ public class LimitsV2 extends JavaModule {
 
     /**
      * Find a limit in the list of limits that equals the given limit in class;
-     * The LIMIT itself does not need to be equal; only the class & if it's a
-     * BlockLimit, the material must equal
+     * The LIMIT itself does not need to be equal; only the type
      *
      * @param limits
      * @param compare
@@ -653,17 +713,8 @@ public class LimitsV2 extends JavaModule {
      */
     private Limit findLimit(List<Limit> limits, Limit compare) {
         for (Limit limit : limits) {
-            if (limit != null && limit.getClass().isInstance(compare)) {
-                if (limit instanceof BlockLimit) {
-                    BlockLimit cmp1 = (BlockLimit) limit;
-                    BlockLimit cmp2 = (BlockLimit) compare;
-
-                    if (cmp1.getMaterial() == cmp2.getMaterial()) {
-                        return limit;
-                    }
-                } else {
-                    return limit;
-                }
+            if (limit != null && compare.getTypeName().equals(limit.getTypeName())) {
+                return limit;
             }
         }
 

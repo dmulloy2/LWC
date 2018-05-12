@@ -28,6 +28,7 @@
 
 package com.griefcraft.modules.limits;
 
+import com.griefcraft.bukkit.EntityBlock;
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCProtectionRegisterEvent;
@@ -49,6 +50,11 @@ public class LimitsModule extends JavaModule {
      * NODE.BLOCK.limit
      */
     public static final String PERMISSION_NODE_BLOCK = "lwc.limit.block.";
+
+    /**
+     * NODE.BLOCK.limit
+     */
+    public static final String PERMISSION_NODE_ENTITY = "lwc.limit.entity.";
 
     /**
      * Limits type
@@ -127,7 +133,7 @@ public class LimitsModule extends JavaModule {
         }
 
         LWC lwc = LWC.getInstance();
-        int limit = mapProtectionLimit(player, block.getTypeId());
+        int limit = mapProtectionLimit(player, block);
 
         // if they're limit is unlimited, how could they get above it? :)
         if (limit == UNLIMITED) {
@@ -198,10 +204,10 @@ public class LimitsModule extends JavaModule {
      * Get the protection limits for a player
      *
      * @param player
-     * @param blockId
+     * @param block
      * @return
      */
-    public int mapProtectionLimit(Player player, int blockId) {
+    public int mapProtectionLimit(Player player, Block block) {
         if (configuration == null) {
             return 0;
         }
@@ -217,8 +223,20 @@ public class LimitsModule extends JavaModule {
             return globalLimit;
         }
 
+        int blockId = block.getTypeId();
+        int blockLimit;
         // Try the block id now
-        int blockLimit = searchPermissionsForInteger(player, PERMISSION_NODE_BLOCK + blockId + ".");
+        if (block instanceof EntityBlock) {
+            blockLimit = searchPermissionsForInteger(player, PERMISSION_NODE_ENTITY + ((EntityBlock) block).getEntityType().toString().toLowerCase() + ".");
+            if (blockLimit == -1) {
+                blockLimit = searchPermissionsForInteger(player, PERMISSION_NODE_ENTITY + blockId + ".");
+            }
+        } else {
+            blockLimit = searchPermissionsForInteger(player, PERMISSION_NODE_BLOCK + block.getType().toString().toLowerCase() + ".");
+            if (blockLimit == -1) {
+                blockLimit = searchPermissionsForInteger(player, PERMISSION_NODE_BLOCK + blockId + ".");
+            }
+        }
 
         if (blockLimit != -1) {
             return blockLimit;
@@ -236,7 +254,12 @@ public class LimitsModule extends JavaModule {
 
                 // and now try the name
                 if (limit == -1 && blockId > 0) {
-                    String name = StringUtils.replace(Material.getMaterial(blockId).toString().toLowerCase(), "block", "");
+                    String name;
+                    if (block instanceof EntityBlock) {
+                        name = ((EntityBlock) block).getEntityType().toString().toLowerCase();
+                    } else {
+                        name = StringUtils.replace(block.getType().toString().toLowerCase(), "block", "");
+                    }
 
                     if (name.endsWith("_")) {
                         name = name.substring(0, name.length() - 1);

@@ -28,6 +28,7 @@
 
 package com.griefcraft.modules.flag;
 
+import com.griefcraft.bukkit.EntityBlock;
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.model.Flag;
 import com.griefcraft.model.Protection;
@@ -42,6 +43,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
+import org.bukkit.event.block.BlockEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
@@ -133,10 +135,10 @@ public class MagnetModule extends JavaModule {
 
                         for (Protection protection : protections) {
                             if (protection.hasFlag(Flag.Type.MAGNET)) {
-                                protection.getBlock();
+                                Block block = protection.getBlock();
 
                                 // we only want inventory blocks
-                                if (!(protection.getBlock().getState() instanceof InventoryHolder)) {
+                                if (block == null || !(block.getState() instanceof InventoryHolder)) { // TODO: optimize, Block#getState is slow as it creates a new BlockState object on each call
                                     continue;
                                 }
 
@@ -157,16 +159,16 @@ public class MagnetModule extends JavaModule {
 
             while ((node = items.poll()) != null) {
                 Item item = node.item;
+                if (item.isDead()) {
+                    continue;
+                }
+
                 Protection protection = node.protection;
 
                 World world = item.getWorld();
                 ItemStack itemStack = item.getItemStack();
                 Location location = item.getLocation();
                 Block block = protection.getBlock();
-
-                if (item.isDead()) {
-                    continue;
-                }
 
                 // Remove the items and suck them up :3
                 Map<Integer, ItemStack> remaining;

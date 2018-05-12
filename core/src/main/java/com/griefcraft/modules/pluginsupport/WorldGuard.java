@@ -164,7 +164,7 @@ public class WorldGuard extends JavaModule {
         // Calculate the amount of the blocks in the region
         int numBlocks = (maxBlockX - minBlockX + 1) * (maxBlockY - minBlockY + 1) * (maxBlockZ - minBlockZ + 1);
 
-        if (args[0].equals("purgeregion")) {
+        if (args[0].equals("purgeregion")) { // TODO: Entity support
             // get all of the protections inside of the region
             List<Protection> protections = lwc.getPhysicalDatabase().loadProtections(world.getName(), minBlockX, maxBlockX, minBlockY, maxBlockY, minBlockZ, maxBlockZ);
 
@@ -174,7 +174,7 @@ public class WorldGuard extends JavaModule {
             }
 
             sender.sendMessage(Colors.Green + "Removed " + protections.size() + " protections from the region " + regionName);
-        } else if (args[0].equals("protectregion")) {
+        } else if (args[0].equals("protectregion")) { // TODO: Entity support
             // The owner to assign to the protections
             String ownerName = "LWCWorldGuard";
 
@@ -253,11 +253,14 @@ public class WorldGuard extends JavaModule {
                 continue;
             } else {
                 // Region name specified, go look it up
-                World world;
+                World world = null;
                 int c = regionName.indexOf(':');
                 if (c < 0) {
                     // No world specified in ACL. Use the block's world.
-                    world = protection.getBlock().getWorld();
+                    Block block = protection.getBlock();
+                    if (block != null) {
+                        world = block.getWorld();
+                    }
                 } else {
                     // World specified. Partition the string and look up the world.
                     String worldName = regionName.substring(c + 1);

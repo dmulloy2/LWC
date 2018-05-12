@@ -28,6 +28,7 @@
 
 package com.griefcraft.model;
 
+import com.griefcraft.bukkit.EntityBlock;
 import com.griefcraft.cache.ProtectionCache;
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.scripting.event.LWCProtectionRemovePostEvent;
@@ -605,6 +606,9 @@ public class Protection {
      */
     public boolean isBlockInWorld() {
         Block block = getBlock();
+        if (block == null) {
+            return false;
+        }
 
         switch (block.getType()) {
             case FURNACE:
@@ -934,7 +938,7 @@ public class Protection {
      * @return the block representing the protection in the world
      */
     public Block getBlock() {
-        if (cachedBlock != null) {
+        if (cachedBlock != null || getBlockId() > EntityBlock.ENTITY_BLOCK_ID) {
             return cachedBlock;
         }
 

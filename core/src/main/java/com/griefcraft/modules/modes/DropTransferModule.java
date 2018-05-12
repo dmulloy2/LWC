@@ -163,7 +163,7 @@ public class DropTransferModule extends JavaModule {
             return;
         }
 
-        Block block = world.getBlockAt(protection.getX(), protection.getY(), protection.getZ());
+        Block block = protection.getBlock();
         Map<Integer, ItemStack> remaining = lwc.depositItems(block, itemStack);
         Map<Integer, ItemStack> forceDrop = null;
 

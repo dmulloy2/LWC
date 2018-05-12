@@ -129,8 +129,9 @@ public class EconomyModule extends JavaModule {
             return;
         }
 
+        Block block = protection.getBlock();
         // is it actually a container? :p
-        if (!(protection.getBlock().getState() instanceof InventoryHolder)) {
+        if (block == null || !(block.getState() instanceof InventoryHolder)) { // TODO: optimize, Block#getState is slow as it creates a new BlockState object on each call
             return;
         }
 

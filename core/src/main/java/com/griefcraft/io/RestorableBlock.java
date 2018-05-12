@@ -28,6 +28,7 @@
 
 package com.griefcraft.io;
 
+import com.griefcraft.bukkit.EntityBlock;
 import com.griefcraft.lwc.LWC;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
@@ -87,6 +88,11 @@ public class RestorableBlock implements Restorable {
 
         lwc.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(lwc.getPlugin(), new Runnable() {
             public void run() {
+                if (x > EntityBlock.POSITION_OFFSET && y > EntityBlock.POSITION_OFFSET && z > EntityBlock.POSITION_OFFSET) {
+                    //TODO: Add ability to rebuild block entities
+                    return;
+                }
+
                 Server server = Bukkit.getServer();
 
                 // Get the world
@@ -136,7 +142,7 @@ public class RestorableBlock implements Restorable {
      * @return
      */
     public static RestorableBlock wrapBlock(Block block) {
-        if (block == null) {
+        if (block == null || block instanceof EntityBlock) {
             return null;
         }
 

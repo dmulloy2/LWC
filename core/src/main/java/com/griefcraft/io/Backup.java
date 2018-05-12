@@ -193,6 +193,10 @@ public class Backup {
      * @param restorable
      */
     protected void writeRestorable(Restorable restorable) throws IOException {
+        if (restorable == null) {
+            return;
+        }
+
         if (operationMode != OperationMode.WRITE) {
             throw new UnsupportedOperationException("WRITE is not allowed on this backup.");
         }

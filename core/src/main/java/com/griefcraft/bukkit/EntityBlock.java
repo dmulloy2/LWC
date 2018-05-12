@@ -10,6 +10,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.PistonMoveReaction;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
@@ -27,6 +28,10 @@ public class EntityBlock implements Block {
 
     public Entity getEntity() {
         return this.entity;
+    }
+
+    public EntityType getEntityType() {
+        return entity.getType();
     }
 
     public static int calcHash(int hash) {

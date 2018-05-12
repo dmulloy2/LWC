@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -51,8 +52,13 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Furnace;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.ItemFrame;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.FurnaceInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -235,8 +241,8 @@ public class LWC {
      * @return
      */
     public static String materialToString(Block block) {
-        if(block.getTypeId() > EntityBlock.ENTITY_BLOCK_ID) {
-            return entityToString(EntityType.fromId(block.getTypeId() - EntityBlock.ENTITY_BLOCK_ID));
+        if (block instanceof EntityBlock) {
+            return entityToString(((EntityBlock) block).getEntityType());
         }
         return materialToString(block.getType());
     }
@@ -498,6 +504,10 @@ public class LWC {
      * @return remaining items (if any)
      */
     public Map<Integer, ItemStack> depositItems(Block block, ItemStack itemStack) {
+        if (block == null || block instanceof EntityBlock) {
+            return Collections.singletonMap(0, itemStack);
+        }
+
         BlockState blockState;
 
         if ((blockState = block.getState()) != null && (blockState instanceof InventoryHolder)) {
@@ -525,7 +535,7 @@ public class LWC {
             }
 
             if (itemStack.getAmount() <= 0) {
-                return new HashMap<Integer, ItemStack>();
+                return new HashMap<>();
             }
 
             Map<Integer, ItemStack> remaining = holder.getInventory().addItem(itemStack);
@@ -548,7 +558,7 @@ public class LWC {
             }
         }
 
-        return new HashMap<Integer, ItemStack>();
+        return new HashMap<>();
     }
 
     /**
@@ -1480,9 +1490,8 @@ public class LWC {
      * @return
      */
     public String resolveProtectionConfiguration(Block block, String node) {
-        if(block.getTypeId() >= EntityBlock.ENTITY_BLOCK_ID) {
-            EntityType et = EntityType.fromId(block.getTypeId() - EntityBlock.ENTITY_BLOCK_ID);
-            return et == null ? null : resolveProtectionConfiguration(et, node);
+        if(block instanceof EntityBlock) {
+            return resolveProtectionConfiguration(((EntityBlock) block).getEntityType(), node);
         }
         Material material = block.getType();
         String cacheKey = block.getData() + "-" + material.toString() + "-" + node;

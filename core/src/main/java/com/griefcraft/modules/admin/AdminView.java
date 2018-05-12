@@ -4,8 +4,8 @@ import com.griefcraft.lwc.LWC;
 import com.griefcraft.model.Protection;
 import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCCommandEvent;
-import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
@@ -57,7 +57,6 @@ public class AdminView extends JavaModule {
         }
 
         Player player = (Player) sender;
-        World world = player.getWorld();
 
         if (args.length < 2) {
             lwc.sendSimpleUsage(sender, "/lwc admin view <id>");
@@ -72,14 +71,19 @@ public class AdminView extends JavaModule {
             return;
         }
 
-        Block block = world.getBlockAt(protection.getX(), protection.getY(), protection.getZ());
+        Block block = protection.getBlock();
+        if (block == null) {
+            lwc.sendLocale(sender, "protection.admin.view.noexist");
+            return;
+        }
 
-        if (!(block.getState() instanceof InventoryHolder)) {
+        BlockState blockState = block.getState(); // TODO: optimize, Block#getState will create a new BlockState object on each call
+        if (!(blockState instanceof InventoryHolder)) {
             lwc.sendLocale(sender, "protection.admin.view.noinventory");
             return;
         }
 
-        player.openInventory(((InventoryHolder) block.getState()).getInventory());
+        player.openInventory(((InventoryHolder) blockState).getInventory());
 
         lwc.sendLocale(sender, "protection.admin.view.viewing", "id", protectionId);
     }
