@@ -141,141 +141,141 @@ public class LWCEntityListener implements Listener {
             }
         }
     }
-	
-	@EventHandler(ignoreCancelled=true, priority=EventPriority.MONITOR)
-	public void onHangingPlace(HangingPlaceEvent event) {
-		if (!LWC.ENABLED || event.isCancelled()) {
-			return;
-		}
-		Player player = event.getPlayer();
-		Entity block = event.getEntity();
-		
-		entityCreatedByPlayer(block, player);
-	}
-	
-	protected final HashMap<Player, Location> playerCreatedEntities = new HashMap<>();
 
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-	public void onPlayerInteract(PlayerInteractEvent event) {
-		if (!LWC.ENABLED || event.isCancelled()) {
-			return;
-		}
-		final ItemStack inHand = event.getItem();
-		if (inHand != null && 
-				(inHand.getType() == Material.ARMOR_STAND
-				|| inHand.getType() == Material.MINECART
-				|| inHand.getType() == Material.HOPPER_MINECART
-				|| inHand.getType() == Material.STORAGE_MINECART)) {
-			// actual location of an armor stand is x+0.5 z+0.5 from the air block coords
-			// minecarts spawn at y+0.0625, though
-			final Location l = event.getClickedBlock().getRelative(inHand.getType() == Material.ARMOR_STAND ? event.getBlockFace() : BlockFace.SELF).getLocation();
-			playerCreatedEntities.put(event.getPlayer(), l);
-		}
-	}
-	
-	@EventHandler
-	public void onMinecartCreate(VehicleCreateEvent event) {
-		final Entity entity = event.getVehicle();
-		final Location l = entity.getLocation();
-		// try to find this in the playerCreatedEntities map
-		for (Map.Entry<Player, Location> a : playerCreatedEntities.entrySet()) {
-			if (a.getValue().distanceSquared(l) < 1) {
-				entityCreatedByPlayer(entity, a.getKey());
-				playerCreatedEntities.remove(a.getKey());
-				break;
-			}
-		}
-	}
+    @EventHandler(ignoreCancelled=true, priority=EventPriority.MONITOR)
+    public void onHangingPlace(HangingPlaceEvent event) {
+        if (!LWC.ENABLED || event.isCancelled()) {
+            return;
+        }
+        Player player = event.getPlayer();
+        Entity block = event.getEntity();
 
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-	public void onCreateSpawn(CreatureSpawnEvent event) {
-		if (!LWC.ENABLED || event.isCancelled()) {
-			return;
-		}
-		final Entity entity = event.getEntity();
-		
-		final Location l = entity.getLocation();
-		
-		// try to find this in the playerCreatedEntities map
-		for (Map.Entry<Player, Location> a : playerCreatedEntities.entrySet()) {
-			if (a.getValue().distanceSquared(l) < 1) {
-				entityCreatedByPlayer(entity, a.getKey());
-				playerCreatedEntities.remove(a.getKey());
-				break;
-			}
-		}
-	}
+        entityCreatedByPlayer(block, player);
+    }
 
-	private void entityCreatedByPlayer(Entity entity, Player player) {
-		LWC lwc = plugin.getLWC();
+    protected final HashMap<Player, Location> playerCreatedEntities = new HashMap<>();
 
-		Protection current = lwc.findProtection(entity.getLocation());
-		if (current != null) {
-			if (!current.isBlockInWorld()) {
-				lwc.log("Removing corrupted protection: " + current);
-				current.remove();
-			} else {
-				if (current.getProtectionFinder() != null) {
-					current.getProtectionFinder().fullMatchBlocks();
-					lwc.getProtectionCache().addProtection(current);
-				}
-				return;
-			}
-		}
-		
-		if (!lwc.isProtectable(entity.getType())) {
-			return;
-		}
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!LWC.ENABLED || event.isCancelled()) {
+            return;
+        }
+        final ItemStack inHand = event.getItem();
+        if (inHand != null &&
+                (inHand.getType() == Material.ARMOR_STAND
+                || inHand.getType() == Material.MINECART
+                || inHand.getType() == Material.HOPPER_MINECART
+                || inHand.getType() == Material.STORAGE_MINECART)) {
+            // actual location of an armor stand is x+0.5 z+0.5 from the air block coords
+            // minecarts spawn at y+0.0625, though
+            final Location l = event.getClickedBlock().getRelative(inHand.getType() == Material.ARMOR_STAND ? event.getBlockFace() : BlockFace.SELF).getLocation();
+            playerCreatedEntities.put(event.getPlayer(), l);
+        }
+    }
 
-		String autoRegisterType = lwc.resolveProtectionConfiguration(entity.getType(), "autoRegister");
+    @EventHandler
+    public void onMinecartCreate(VehicleCreateEvent event) {
+        final Entity entity = event.getVehicle();
+        final Location l = entity.getLocation();
+        // try to find this in the playerCreatedEntities map
+        for (Map.Entry<Player, Location> a : playerCreatedEntities.entrySet()) {
+            if (a.getValue().distanceSquared(l) < 1) {
+                entityCreatedByPlayer(entity, a.getKey());
+                playerCreatedEntities.remove(a.getKey());
+                break;
+            }
+        }
+    }
 
-		if ((!autoRegisterType.equalsIgnoreCase("private"))
-				&& (!autoRegisterType.equalsIgnoreCase("public"))) {
-			return;
-		}
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onCreateSpawn(CreatureSpawnEvent event) {
+        if (!LWC.ENABLED || event.isCancelled()) {
+            return;
+        }
+        final Entity entity = event.getEntity();
 
-		if (!lwc.hasPermission(player, "lwc.create." + autoRegisterType, new String[]{"lwc.create", "lwc.protect"})) {
-			return;
-		}
-		
-		Protection.Type type = null;
-		try {
-			type = Protection.Type.valueOf(autoRegisterType.toUpperCase());
-		} catch (IllegalArgumentException e) {
-			return;
-		}
-		if (type == null) {
-			player.sendMessage("§4LWC_INVALID_CONFIG_autoRegister");
-			return;
-		}
-		try {
-			LWCProtectionRegisterEvent evt = new LWCProtectionRegisterEvent(player, EntityBlock.getEntityBlock(entity));
-			lwc.getModuleLoader().dispatchEvent(evt);
+        final Location l = entity.getLocation();
 
-			if (evt.isCancelled()) {
-				return;
-			}
-			
-			int A = EntityBlock.calcHash(entity.getUniqueId().hashCode());
-			Protection protection = lwc.getPhysicalDatabase()
-					.registerProtection(EntityBlock.ENTITY_BLOCK_ID + entity.getType().getTypeId(), type,
-							entity.getWorld().getName(),
-							player.getUniqueId().toString(), "", A, A, A);
+        // try to find this in the playerCreatedEntities map
+        for (Map.Entry<Player, Location> a : playerCreatedEntities.entrySet()) {
+            if (a.getValue().distanceSquared(l) < 1) {
+                entityCreatedByPlayer(entity, a.getKey());
+                playerCreatedEntities.remove(a.getKey());
+                break;
+            }
+        }
+    }
 
-			if (!Boolean.parseBoolean(lwc.resolveProtectionConfiguration(entity.getType(), "quiet"))) {
-				lwc.sendLocale(player, "protection.onplace.create.finalize", new Object[]{
-					"type", lwc.getPlugin().getMessageParser()
-					.parseMessage(autoRegisterType.toLowerCase(), new Object[0]),
-					"block", LWC.entityToString(entity.getType())});
-			}
+    private void entityCreatedByPlayer(Entity entity, Player player) {
+        LWC lwc = plugin.getLWC();
 
-			if (protection != null) {
-				lwc.getModuleLoader().dispatchEvent(
-						new LWCProtectionRegistrationPostEvent(protection));
-			}
-		} catch (Exception e) {
-			lwc.sendLocale(player, "protection.internalerror", new Object[]{"id", "PLAYER_INTERACT"});
-			e.printStackTrace();
-		}
-	}
+        Protection current = lwc.findProtection(entity.getLocation());
+        if (current != null) {
+            if (!current.isBlockInWorld()) {
+                lwc.log("Removing corrupted protection: " + current);
+                current.remove();
+            } else {
+                if (current.getProtectionFinder() != null) {
+                    current.getProtectionFinder().fullMatchBlocks();
+                    lwc.getProtectionCache().addProtection(current);
+                }
+                return;
+            }
+        }
+
+        if (!lwc.isProtectable(entity.getType())) {
+            return;
+        }
+
+        String autoRegisterType = lwc.resolveProtectionConfiguration(entity.getType(), "autoRegister");
+
+        if ((!autoRegisterType.equalsIgnoreCase("private"))
+                && (!autoRegisterType.equalsIgnoreCase("public"))) {
+            return;
+        }
+
+        if (!lwc.hasPermission(player, "lwc.create." + autoRegisterType, new String[]{"lwc.create", "lwc.protect"})) {
+            return;
+        }
+
+        Protection.Type type = null;
+        try {
+            type = Protection.Type.valueOf(autoRegisterType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return;
+        }
+        if (type == null) {
+            player.sendMessage("§4LWC_INVALID_CONFIG_autoRegister");
+            return;
+        }
+        try {
+            LWCProtectionRegisterEvent evt = new LWCProtectionRegisterEvent(player, EntityBlock.getEntityBlock(entity));
+            lwc.getModuleLoader().dispatchEvent(evt);
+
+            if (evt.isCancelled()) {
+                return;
+            }
+
+            int A = EntityBlock.calcHash(entity.getUniqueId().hashCode());
+            Protection protection = lwc.getPhysicalDatabase()
+                    .registerProtection(EntityBlock.ENTITY_BLOCK_ID + entity.getType().getTypeId(), type,
+                            entity.getWorld().getName(),
+                            player.getUniqueId().toString(), "", A, A, A);
+
+            if (!Boolean.parseBoolean(lwc.resolveProtectionConfiguration(entity.getType(), "quiet"))) {
+                lwc.sendLocale(player, "protection.onplace.create.finalize", new Object[]{
+                    "type", lwc.getPlugin().getMessageParser()
+                    .parseMessage(autoRegisterType.toLowerCase(), new Object[0]),
+                    "block", LWC.entityToString(entity.getType())});
+            }
+
+            if (protection != null) {
+                lwc.getModuleLoader().dispatchEvent(
+                        new LWCProtectionRegistrationPostEvent(protection));
+            }
+        } catch (Exception e) {
+            lwc.sendLocale(player, "protection.internalerror", new Object[]{"id", "PLAYER_INTERACT"});
+            e.printStackTrace();
+        }
+    }
 }

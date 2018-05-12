@@ -349,39 +349,39 @@ public class LWCBlockListener implements Listener {
             // it's blacklisted, check for a protected chest
             for (Protection protection : lwc.findAdjacentProtectionsOnAllSides(block)) {
                 if (protection != null) {
-					// double-check protection is valid
-					if(!protection.isBlockInWorld()) {
-						protection.remove();
-					} else {
-						// is this protecting a block with an inventory?
-						switch (protection.getBlock().getType()) {
-							case CHEST:
-							case TRAPPED_CHEST:
-							case HOPPER:
-							case WHITE_SHULKER_BOX:
-							case ORANGE_SHULKER_BOX:
-							case MAGENTA_SHULKER_BOX:
-							case LIGHT_BLUE_SHULKER_BOX:
-							case YELLOW_SHULKER_BOX:
-							case LIME_SHULKER_BOX:
-							case PINK_SHULKER_BOX:
-							case GRAY_SHULKER_BOX:
-							case SILVER_SHULKER_BOX:
-							case CYAN_SHULKER_BOX:
-							case PURPLE_SHULKER_BOX:
-							case BLUE_SHULKER_BOX:
-							case BROWN_SHULKER_BOX:
-							case GREEN_SHULKER_BOX:
-							case RED_SHULKER_BOX:
-							case BLACK_SHULKER_BOX:
-								if (!lwc.canAccessProtection(player, protection) || (protection.getType() == Protection.Type.DONATION && !lwc.canAdminProtection(player, protection))) {
-									// they can't access the protection ..
-									event.setCancelled(true);
-									lwc.sendLocale(player, "protection.general.locked.private", "block", LWC.materialToString(protection.getBlock()));
-									return;
-								}
-						}
-					}
+                    // double-check protection is valid
+                    if(!protection.isBlockInWorld()) {
+                        protection.remove();
+                    } else {
+                        // is this protecting a block with an inventory?
+                        switch (protection.getBlock().getType()) {
+                            case CHEST:
+                            case TRAPPED_CHEST:
+                            case HOPPER:
+                            case WHITE_SHULKER_BOX:
+                            case ORANGE_SHULKER_BOX:
+                            case MAGENTA_SHULKER_BOX:
+                            case LIGHT_BLUE_SHULKER_BOX:
+                            case YELLOW_SHULKER_BOX:
+                            case LIME_SHULKER_BOX:
+                            case PINK_SHULKER_BOX:
+                            case GRAY_SHULKER_BOX:
+                            case SILVER_SHULKER_BOX:
+                            case CYAN_SHULKER_BOX:
+                            case PURPLE_SHULKER_BOX:
+                            case BLUE_SHULKER_BOX:
+                            case BROWN_SHULKER_BOX:
+                            case GREEN_SHULKER_BOX:
+                            case RED_SHULKER_BOX:
+                            case BLACK_SHULKER_BOX:
+                                if (!lwc.canAccessProtection(player, protection) || (protection.getType() == Protection.Type.DONATION && !lwc.canAdminProtection(player, protection))) {
+                                    // they can't access the protection ..
+                                    event.setCancelled(true);
+                                    lwc.sendLocale(player, "protection.general.locked.private", "block", LWC.materialToString(protection.getBlock()));
+                                    return;
+                                }
+                        }
+                    }
                 }
             }
         }
@@ -449,15 +449,15 @@ public class LWCBlockListener implements Listener {
         LWC lwc = plugin.getLWC();
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
-		
+
         // Update the cache if a protection is matched here
         Protection current = lwc.findProtection(block.getLocation());
         if (current != null) {
-			// no use checking if the block id matches. 
-			// This is a build event because it didn't exist before, and does now
-			//lwc.log("Removing corrupted protection: " + current);
+            // no use checking if the block id matches.
+            // This is a build event because it didn't exist before, and does now
+            //lwc.log("Removing corrupted protection: " + current);
             current.remove();
-			/*
+            /*
             if (!current.isBlockInWorld()) {
                 // Corrupted protection
                 lwc.log("Removing corrupted protection: " + current);
@@ -470,7 +470,7 @@ public class LWCBlockListener implements Listener {
 
                 return;
             }
-			*/
+            */
         }
 
         // The placable block must be protectable

@@ -27,8 +27,8 @@
             <url>http://nexus.hc.to/content/repositories/pub_releases/</url>
         </repository>
         <repository>
-        	<id>sk89q-repo</id>
-        	<url>http://maven.sk89q.com/repo/</url>
+            <id>sk89q-repo</id>
+            <url>http://maven.sk89q.com/repo/</url>
         </repository>
     </repositories>
 
@@ -74,7 +74,7 @@
         </dependency>
         -->
 
-		<!-- Find repos for these -->
+        <!-- Find repos for these -->
         <dependency>
             <groupId>Heroes</groupId>
             <artifactId>Heroes</artifactId>

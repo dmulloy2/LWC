@@ -62,15 +62,15 @@ public class InfoModule extends JavaModule {
         event.setResult(Result.CANCEL);
 
         String type = lwc.getPlugin().getMessageParser().parseMessage(protection.typeToString().toLowerCase());
-		Set<Flag.Type> flags = protection.getFlags().keySet();
-		StringBuilder flagStr = new StringBuilder();
-		int nFlags = flags.size();
-		for(Flag.Type flag : flags) {
-			flagStr.append(StringUtil.capitalizeFirstLetter(flag.name()));
-			if(--nFlags > 0) {
-				flagStr.append(", ");
-			}
-		}
+        Set<Flag.Type> flags = protection.getFlags().keySet();
+        StringBuilder flagStr = new StringBuilder();
+        int nFlags = flags.size();
+        for(Flag.Type flag : flags) {
+            flagStr.append(StringUtil.capitalizeFirstLetter(flag.name()));
+            if(--nFlags > 0) {
+                flagStr.append(", ");
+            }
+        }
 
         lwc.sendLocale(player, "lwc.info", "owner", protection.getFormattedOwnerPlayerName(), "type", type, "flags", flagStr.toString());
 

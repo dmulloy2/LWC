@@ -340,7 +340,7 @@ public abstract class Database {
             if (useStatementCache) {
                 Statistics.addQuery();
                 final PreparedStatement p = statementCache.getIfPresent(sql);
-				if(p != null) return p;
+                if(p != null) return p;
             }
 
             return prepareInternal(sql, returnGeneratedKeys);

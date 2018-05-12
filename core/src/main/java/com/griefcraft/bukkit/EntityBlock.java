@@ -16,206 +16,206 @@ import org.bukkit.plugin.Plugin;
 
 public class EntityBlock implements Block {
 
-	public static final int ENTITY_BLOCK_ID = 5000;
-	public static final int POSITION_OFFSET = 50000;
-	
-	private final Entity entity;
+    public static final int ENTITY_BLOCK_ID = 5000;
+    public static final int POSITION_OFFSET = 50000;
 
-	public EntityBlock(Entity entity) {
-		this.entity = entity;
-	}
+    private final Entity entity;
 
-	public Entity getEntity() {
-		return this.entity;
-	}
-	
-	public static int calcHash(int hash) {
-		return (POSITION_OFFSET + Math.abs(hash)) * (hash == 0 ? 1 : Integer.signum(hash));
-	}
+    public EntityBlock(Entity entity) {
+        this.entity = entity;
+    }
 
-	public int getX() {
-		final int hash = entity.getUniqueId().hashCode();
-		return (POSITION_OFFSET + Math.abs(hash)) * (hash == 0 ? 1 : Integer.signum(hash));
-		//return POSITION_OFFSET + this.entity.getUniqueId().hashCode();
-	}
+    public Entity getEntity() {
+        return this.entity;
+    }
 
-	public int getY() {
-		final int hash = entity.getUniqueId().hashCode();
-		return (POSITION_OFFSET + Math.abs(hash)) * (hash == 0 ? 1 : Integer.signum(hash));
-		//return POSITION_OFFSET + this.entity.getUniqueId().hashCode();
-	}
+    public static int calcHash(int hash) {
+        return (POSITION_OFFSET + Math.abs(hash)) * (hash == 0 ? 1 : Integer.signum(hash));
+    }
 
-	public int getZ() {
-		final int hash = entity.getUniqueId().hashCode();
-		return (POSITION_OFFSET + Math.abs(hash)) * (hash == 0 ? 1 : Integer.signum(hash));
-		//return POSITION_OFFSET + this.entity.getUniqueId().hashCode();
-	}
+    public int getX() {
+        final int hash = entity.getUniqueId().hashCode();
+        return (POSITION_OFFSET + Math.abs(hash)) * (hash == 0 ? 1 : Integer.signum(hash));
+        //return POSITION_OFFSET + this.entity.getUniqueId().hashCode();
+    }
 
-	public int getTypeId() {
-		return ENTITY_BLOCK_ID + entity.getType().getTypeId();
-	}
+    public int getY() {
+        final int hash = entity.getUniqueId().hashCode();
+        return (POSITION_OFFSET + Math.abs(hash)) * (hash == 0 ? 1 : Integer.signum(hash));
+        //return POSITION_OFFSET + this.entity.getUniqueId().hashCode();
+    }
 
-	public org.bukkit.World getWorld() {
-		return this.entity.getWorld();
-	}
-	public static Block getEntityBlock(Entity entity) {
-		return new EntityBlock(entity);
-	}
+    public int getZ() {
+        final int hash = entity.getUniqueId().hashCode();
+        return (POSITION_OFFSET + Math.abs(hash)) * (hash == 0 ? 1 : Integer.signum(hash));
+        //return POSITION_OFFSET + this.entity.getUniqueId().hashCode();
+    }
 
-	public List<MetadataValue> getMetadata(String arg0) {
-		return null;
-	}
+    public int getTypeId() {
+        return ENTITY_BLOCK_ID + entity.getType().getTypeId();
+    }
 
-	public boolean hasMetadata(String arg0) {
-		return false;
-	}
+    public org.bukkit.World getWorld() {
+        return this.entity.getWorld();
+    }
+    public static Block getEntityBlock(Entity entity) {
+        return new EntityBlock(entity);
+    }
 
-	public void removeMetadata(String arg0, Plugin arg1) {
-	}
+    public List<MetadataValue> getMetadata(String arg0) {
+        return null;
+    }
 
-	public void setMetadata(String arg0, MetadataValue arg1) {
-	}
+    public boolean hasMetadata(String arg0) {
+        return false;
+    }
 
-	public boolean breakNaturally() {
-		return false;
-	}
+    public void removeMetadata(String arg0, Plugin arg1) {
+    }
 
-	public boolean breakNaturally(ItemStack arg0) {
-		return false;
-	}
+    public void setMetadata(String arg0, MetadataValue arg1) {
+    }
 
-	public Biome getBiome() {
-		return null;
-	}
+    public boolean breakNaturally() {
+        return false;
+    }
 
-	public int getBlockPower() {
-		return 0;
-	}
+    public boolean breakNaturally(ItemStack arg0) {
+        return false;
+    }
 
-	public int getBlockPower(BlockFace arg0) {
-		return 0;
-	}
+    public Biome getBiome() {
+        return null;
+    }
 
-	public org.bukkit.Chunk getChunk() {
-		return null;
-	}
+    public int getBlockPower() {
+        return 0;
+    }
 
-	public byte getData() {
-		return 0;
-	}
+    public int getBlockPower(BlockFace arg0) {
+        return 0;
+    }
 
-	public Collection<ItemStack> getDrops() {
-		return null;
-	}
+    public org.bukkit.Chunk getChunk() {
+        return null;
+    }
 
-	public Collection<ItemStack> getDrops(ItemStack arg0) {
-		return null;
-	}
+    public byte getData() {
+        return 0;
+    }
 
-	public BlockFace getFace(Block arg0) {
-		return null;
-	}
+    public Collection<ItemStack> getDrops() {
+        return null;
+    }
 
-	public double getHumidity() {
-		return 0.0D;
-	}
+    public Collection<ItemStack> getDrops(ItemStack arg0) {
+        return null;
+    }
 
-	public byte getLightFromBlocks() {
-		return 0;
-	}
+    public BlockFace getFace(Block arg0) {
+        return null;
+    }
 
-	public byte getLightFromSky() {
-		return 0;
-	}
+    public double getHumidity() {
+        return 0.0D;
+    }
 
-	public byte getLightLevel() {
-		return 0;
-	}
+    public byte getLightFromBlocks() {
+        return 0;
+    }
 
-	public Location getLocation() {
-		return null;
-	}
+    public byte getLightFromSky() {
+        return 0;
+    }
 
-	public Location getLocation(Location arg0) {
-		return null;
-	}
+    public byte getLightLevel() {
+        return 0;
+    }
 
-	public PistonMoveReaction getPistonMoveReaction() {
-		return null;
-	}
+    public Location getLocation() {
+        return null;
+    }
 
-	public Block getRelative(BlockFace arg0) {
-		return null;
-	}
+    public Location getLocation(Location arg0) {
+        return null;
+    }
 
-	public Block getRelative(BlockFace arg0, int arg1) {
-		return null;
-	}
+    public PistonMoveReaction getPistonMoveReaction() {
+        return null;
+    }
 
-	public Block getRelative(int arg0, int arg1, int arg2) {
-		return null;
-	}
+    public Block getRelative(BlockFace arg0) {
+        return null;
+    }
 
-	public BlockState getState() {
-		return null;
-	}
+    public Block getRelative(BlockFace arg0, int arg1) {
+        return null;
+    }
 
-	public double getTemperature() {
-		return 0.0D;
-	}
+    public Block getRelative(int arg0, int arg1, int arg2) {
+        return null;
+    }
 
-	public Material getType() {
-		return null;
-	}
+    public BlockState getState() {
+        return null;
+    }
 
-	public boolean isBlockFaceIndirectlyPowered(BlockFace arg0) {
-		return false;
-	}
+    public double getTemperature() {
+        return 0.0D;
+    }
 
-	public boolean isBlockFacePowered(BlockFace arg0) {
-		return false;
-	}
+    public Material getType() {
+        return null;
+    }
 
-	public boolean isBlockIndirectlyPowered() {
-		return false;
-	}
+    public boolean isBlockFaceIndirectlyPowered(BlockFace arg0) {
+        return false;
+    }
 
-	public boolean isBlockPowered() {
-		return false;
-	}
+    public boolean isBlockFacePowered(BlockFace arg0) {
+        return false;
+    }
 
-	public boolean isEmpty() {
-		return false;
-	}
+    public boolean isBlockIndirectlyPowered() {
+        return false;
+    }
 
-	public boolean isLiquid() {
-		return false;
-	}
+    public boolean isBlockPowered() {
+        return false;
+    }
 
-	public void setBiome(Biome arg0) {
-	}
+    public boolean isEmpty() {
+        return false;
+    }
 
-	public void setData(byte arg0) {
-	}
+    public boolean isLiquid() {
+        return false;
+    }
 
-	public void setData(byte arg0, boolean arg1) {
-	}
+    public void setBiome(Biome arg0) {
+    }
 
-	public void setType(Material arg0) {
-	}
+    public void setData(byte arg0) {
+    }
 
-	public void setType(Material arg0, boolean arg1) {
-	}
+    public void setData(byte arg0, boolean arg1) {
+    }
 
-	public boolean setTypeId(int arg0) {
-		return false;
-	}
+    public void setType(Material arg0) {
+    }
 
-	public boolean setTypeId(int arg0, boolean arg1) {
-		return false;
-	}
+    public void setType(Material arg0, boolean arg1) {
+    }
 
-	public boolean setTypeIdAndData(int arg0, byte arg1, boolean arg2) {
-		return false;
-	}
+    public boolean setTypeId(int arg0) {
+        return false;
+    }
+
+    public boolean setTypeId(int arg0, boolean arg1) {
+        return false;
+    }
+
+    public boolean setTypeIdAndData(int arg0, byte arg1, boolean arg2) {
+        return false;
+    }
 }

@@ -112,7 +112,7 @@ public class DoorsModule extends JavaModule {
 
         // Ignore the off-hand
         if (event.getEvent().getHand() != EquipmentSlot.HAND) {
-        	return;
+            return;
         }
 
         // The more important check
@@ -157,7 +157,7 @@ public class DoorsModule extends JavaModule {
         // toggle the other side of the door open
         // wooden doors and trapdoors open when you right click
         boolean opensWhenClicked = event.getEvent().getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK &&
-        		!block.getType().name().contains("IRON");
+                !block.getType().name().contains("IRON");
         changeDoorStates(true, (opensWhenClicked ? null : block), doubleDoorBlock);
 
         // TODO Keep double doors in sync
@@ -264,9 +264,9 @@ public class DoorsModule extends JavaModule {
      * @return
      */
     private boolean isValid(Material material) {
-    	return DoorMatcher.DOORS.contains(material)
-    			|| DoorMatcher.FENCE_GATES.contains(material)
-    			|| DoorMatcher.TRAP_DOORS.contains(material);
+        return DoorMatcher.DOORS.contains(material)
+                || DoorMatcher.FENCE_GATES.contains(material)
+                || DoorMatcher.TRAP_DOORS.contains(material);
     }
 
     /**

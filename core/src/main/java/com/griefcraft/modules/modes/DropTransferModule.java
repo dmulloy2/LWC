@@ -230,8 +230,8 @@ public class DropTransferModule extends JavaModule {
         }
 
         player.removeAllActions(); // ignore the persist mode
-		// don't allow the block to be interacted with
-		event.setResult(Result.CANCEL);
+        // don't allow the block to be interacted with
+        event.setResult(Result.CANCEL);
     }
 
     @Override

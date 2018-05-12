@@ -32,47 +32,47 @@ import org.apache.commons.lang.Validate;
 
 public class Closer implements Closeable
 {
-	private final List<AutoCloseable> list = new ArrayList<>();
+    private final List<AutoCloseable> list = new ArrayList<>();
 
-	/**
-	 * Registers a closeable object.
-	 *
-	 * @param closeable Object to register
-	 * @return The object
-	 */
-	public final <C extends AutoCloseable> C register(C closeable)
-	{
-		Validate.notNull(closeable, "closeable cannot be null!");
+    /**
+     * Registers a closeable object.
+     *
+     * @param closeable Object to register
+     * @return The object
+     */
+    public final <C extends AutoCloseable> C register(C closeable)
+    {
+        Validate.notNull(closeable, "closeable cannot be null!");
 
-		list.add(closeable);
-		return closeable;
-	}
+        list.add(closeable);
+        return closeable;
+    }
 
-	@Override
-	public final void close()
-	{
-		if (list.isEmpty())
-			return;
+    @Override
+    public final void close()
+    {
+        if (list.isEmpty())
+            return;
 
-		Iterator<AutoCloseable> iter = list.iterator();
-		while (iter.hasNext())
-		{
-			closeQuietly(iter.next());
-			iter.remove();
-		}
-	}
+        Iterator<AutoCloseable> iter = list.iterator();
+        while (iter.hasNext())
+        {
+            closeQuietly(iter.next());
+            iter.remove();
+        }
+    }
 
-	/**
-	 * Quietly closes a closeable object, ignoring all exceptions.
-	 * 
-	 * @param closeable Object to close
-	 */
-	public static void closeQuietly(AutoCloseable closeable)
-	{
-		try
-		{
-			if (closeable != null)
-				closeable.close();
-		} catch (Throwable ex) { }
-	}
+    /**
+     * Quietly closes a closeable object, ignoring all exceptions.
+     *
+     * @param closeable Object to close
+     */
+    public static void closeQuietly(AutoCloseable closeable)
+    {
+        try
+        {
+            if (closeable != null)
+                closeable.close();
+        } catch (Throwable ex) { }
+    }
 }

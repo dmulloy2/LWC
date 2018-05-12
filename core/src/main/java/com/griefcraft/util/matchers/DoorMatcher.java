@@ -49,25 +49,25 @@ public class DoorMatcher implements ProtectionFinder.Matcher {
     public static final Set<Material> TRAP_DOORS;
 
     static {
-    	DOORS = EnumSet.noneOf(Material.class);
-    	PRESSURE_PLATES = EnumSet.noneOf(Material.class);
-    	FENCE_GATES = EnumSet.noneOf(Material.class);
-    	TRAP_DOORS = EnumSet.noneOf(Material.class);
+        DOORS = EnumSet.noneOf(Material.class);
+        PRESSURE_PLATES = EnumSet.noneOf(Material.class);
+        FENCE_GATES = EnumSet.noneOf(Material.class);
+        TRAP_DOORS = EnumSet.noneOf(Material.class);
 
-    	for (Material material : Material.values()) {
-    		String name = material.name();
-    		if (name.contains("DOOR") && !name.contains("ITEM")) {
-    			if (name.contains("TRAP")) {
-    				TRAP_DOORS.add(material);
-    			} else {
-    				DOORS.add(material);
-    			}
-    		} else if (name.contains("GATE") && !name.contains("END")) {
-    			FENCE_GATES.add(material);
-    		} else if (name.contains("_PLATE")) {
-    			PRESSURE_PLATES.add(material);
-    		}
-    	}
+        for (Material material : Material.values()) {
+            String name = material.name();
+            if (name.contains("DOOR") && !name.contains("ITEM")) {
+                if (name.contains("TRAP")) {
+                    TRAP_DOORS.add(material);
+                } else {
+                    DOORS.add(material);
+                }
+            } else if (name.contains("GATE") && !name.contains("END")) {
+                FENCE_GATES.add(material);
+            } else if (name.contains("_PLATE")) {
+                PRESSURE_PLATES.add(material);
+            }
+        }
     }
 
     private static final BlockFace[] faces = new BlockFace[] {
