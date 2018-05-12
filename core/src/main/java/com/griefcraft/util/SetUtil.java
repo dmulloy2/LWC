@@ -13,12 +13,14 @@ public class SetUtil {
      * it with a helper method.
      *
      * @param set
-     * @param obj
+     * @param objects
      * @param <T>
      */
-    public static <T> void addToSetWithoutNull(Set<T> set, T obj) {
-        if (obj != null) {
-            set.add(obj);
+    public static <T> void addToSetWithoutNull(Set<T> set, T... objects) {
+        for (T obj : objects) {
+            if (obj != null) {
+                set.add(obj);
+            }
         }
     }
 

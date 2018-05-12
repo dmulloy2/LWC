@@ -358,6 +358,10 @@ public class LWCBlockListener implements Listener {
                             case CHEST:
                             case TRAPPED_CHEST:
                             case HOPPER:
+                            case DISPENSER:
+                            case DROPPER:
+                            case BREWING_STAND:
+                            case FURNACE:
                             case WHITE_SHULKER_BOX:
                             case ORANGE_SHULKER_BOX:
                             case MAGENTA_SHULKER_BOX:
