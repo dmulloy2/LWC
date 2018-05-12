@@ -245,35 +245,13 @@ public class LWCBlockListener implements Listener {
         }
 
         LWC lwc = plugin.getLWC();
-        Block piston = event.getBlock();
-        BlockState state = piston.getState();
-        MaterialData data = state.getData();
-        BlockFace direction = null;
 
-        // Check the block it pushed directly
-        if (data instanceof PistonBaseMaterial) {
-            direction = ((PistonBaseMaterial) data).getFacing();
-        }
-
-        if (direction == null) {
-            return;
-        }
-
-        // the block that the piston moved
-        Block moved = piston.getRelative(direction, 2);
-
-        // TODO remove this when spout fixes their shit
-        if (moved.getType() == Material.WOODEN_DOOR || moved.getType() == Material.IRON_DOOR_BLOCK) {
-            Block below = moved.getRelative(BlockFace.DOWN).getRelative(direction.getOppositeFace());
-
-            if (lwc.findProtection(below.getLocation()) != null) {
+        // Check the affected blocks
+        for (Block moved : event.getBlocks()) {
+            if (lwc.findProtection(moved.getLocation()) != null) {
                 event.setCancelled(true);
-                return;
+                break;
             }
-        }
-
-        if (lwc.findProtection(moved.getLocation()) != null) {
-            event.setCancelled(true);
         }
     }
 
@@ -284,40 +262,10 @@ public class LWCBlockListener implements Listener {
         }
 
         LWC lwc = plugin.getLWC();
-        Block piston = event.getBlock();
-        BlockState state = piston.getState();
-        MaterialData data = state.getData();
-        BlockFace direction = null;
-
-        // Check the block it pushed directly
-        if (data instanceof PistonBaseMaterial) {
-            direction = ((PistonBaseMaterial) data).getFacing();
-            Block block = event.getBlock().getRelative(direction);
-
-            Protection protection = lwc.findProtection(block.getLocation());
-
-            if (protection != null) {
-                event.setCancelled(true);
-                return;
-            }
-        }
-
-        // if no direction was found, no point in going on
-        if (direction == null) {
-            return;
-        }
 
         // Check the affected blocks
-        for (int i = 0; i < event.getLength() + 2; i++) {
-            Block block = piston.getRelative(direction, i);
-            Protection protection = lwc.findProtection(block.getLocation());
-
-            // We don't want that!
-            if (block.getType() == Material.AIR) {
-                break;
-            }
-
-            if (protection != null) {
+        for (Block moved : event.getBlocks()) {
+            if (lwc.findProtection(moved.getLocation()) != null) {
                 event.setCancelled(true);
                 break;
             }
@@ -393,7 +341,7 @@ public class LWCBlockListener implements Listener {
         if (lwc.useAlternativeHopperProtection() && block.getType() == Material.HOPPER) {
             // we use the alternative hopper protection, check if the hopper is placed below a container!
             Block above = block.getRelative(BlockFace.UP);
-            if (!checkHopperProtection(player, above)) {
+            if (checkForHopperProtection(player, above)) {
                 event.setCancelled(true);
                 return;
             }
@@ -401,27 +349,27 @@ public class LWCBlockListener implements Listener {
             // also check if the hopper is pointing into a protection
             Hopper hopperData = (Hopper) block.getState().getData();
             Block target = block.getRelative(hopperData.getFacing());
-            if (!checkHopperProtection(player, target)) {
+            if (checkForHopperProtection(player, target)) {
                 event.setCancelled(true);
                 return;
             }
         }
     }
     
-    private boolean checkHopperProtection(Player player, Block block) {
+    private boolean checkForHopperProtection(Player player, Block block) {
         if (block.getState() instanceof InventoryHolder) { // only care if block has an inventory
             LWC lwc = plugin.getLWC();
-            Protection protection = lwc.findProtection(block);
+            Protection protection = lwc.findProtection(block.getLocation());
             if (protection != null) { // found protection
                 boolean denyHoppers = Boolean.parseBoolean(lwc.resolveProtectionConfiguration(block, "denyHoppers"));
                 if (!lwc.canAccessProtection(player, protection) || (denyHoppers != protection.hasFlag(Flag.Type.HOPPER) && !lwc.canAdminProtection(player, protection))) {
                     // player can't access the protection and hoppers aren't enabled for it
                     lwc.enforceAccess(player, protection, block, false);
-                    return false;
+                    return true;
                 }
             }
         }
-        return true;
+        return false;
     }
 
     @EventHandler(ignoreCancelled = true)
