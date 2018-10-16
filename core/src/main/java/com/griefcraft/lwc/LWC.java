@@ -40,6 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
@@ -62,7 +63,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.mcstats.Metrics;
+import org.bstats.bukkit.Metrics;
 
 import com.griefcraft.bukkit.EntityBlock;
 import com.griefcraft.cache.ProtectionCache;
@@ -1673,64 +1674,69 @@ public class LWC {
 
         // Should we try metrics?
         if (!configuration.getBoolean("optional.optOut", false)) {
-            try {
-                Metrics metrics = new Metrics(plugin);
-
-                // Create a line graph
-                Metrics.Graph lineGraph = metrics.createGraph("Protections");
-
-                // Add the total protections plotter
-                lineGraph.addPlotter(new Metrics.Plotter("Total") {
-                    @Override
-                    public int getValue() {
-                        return physicalDatabase.getProtectionCount();
-                    }
-                });
-
-                // Create a pie graph for individual protections
-                Metrics.Graph pieGraph = metrics.createGraph("Protection percentages");
-
+                configureMetrics();
+        }
+    }
+    
+    private void configureMetrics(){
+        Metrics metrics = new Metrics(plugin);
+        metrics.addCustomChart(new Metrics.AdvancedPie("protected_blocks", new Callable<Map<String, Integer>>() {
+            @Override
+            public Map<String, Integer> call() throws Exception {
+                Map<String, Integer> map = new HashMap<String, Integer>();
+                int count = physicalDatabase.getProtectionCount();
+                if (count >= 50000) {
+                    map.put("Over 50k", 1);
+                } else if (count >= 25000) {
+                    map.put("Over 25k", 1);
+                } else if (count >= 10000) {
+                    map.put("Over 10k", 1);
+                } else if (count >= 5000) {
+                    map.put("Over 5k", 1);
+                } else if (count >= 1000) {
+                    map.put("Over 1k", 1);
+                } else {
+                    map.put("Under 1k", 1);
+                }
+                return map;
+            }
+        }));
+    
+        metrics.addCustomChart(new Metrics.SimplePie("used_language", new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return configuration.getString("core.locale");
+            }
+        }));
+    
+        metrics.addCustomChart(new Metrics.SimplePie("database_used", new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                String database = getConfiguration().getString("database.adapter");
+                if (database.equalsIgnoreCase("mysql"))
+                    return "MySQL";
+            
+                return "SQLite";
+            }
+        }));
+    
+        // Create a pie graph for individual protections
+        Metrics.AdvancedPie a =  new Metrics.AdvancedPie("protection_percentages",
+                new Callable<Map<String, Integer>>() {
+            @Override
+            public Map<String, Integer> call() throws Exception {
+                Map<String, Integer> result =  new HashMap<>();
                 for (final Protection.Type type : Protection.Type.values()) {
                     if (type == Protection.Type.RESERVED1 || type == Protection.Type.RESERVED2) {
                         continue;
                     }
-
-                    // Create the plotter
-                    Metrics.Plotter plotter = new Metrics.Plotter(StringUtil.capitalizeFirstLetter(type.toString()) + " Protections") {
-                        @Override
-                        public int getValue() {
-                            return physicalDatabase.getProtectionCount(type);
-                        }
-                    };
-
-                    // Add it to both graphs
-                    lineGraph.addPlotter(plotter);
-                    pieGraph.addPlotter(plotter);
+                    result.put(StringUtil.capitalizeFirstLetter(type.toString()),
+                            physicalDatabase.getProtectionCount(type));
                 }
-
-                // Locale
-                Metrics.Graph langGraph = metrics.createGraph("Locale");
-                langGraph.addPlotter(new Metrics.Plotter(LocaleUtil.iso639ToEnglish(configuration.getString("core.locale", "en"))) {
-                    @Override
-                    public int getValue() {
-                        return 1;
-                    }
-                });
-
-                // Database type
-                Metrics.Graph databaseGraph = metrics.createGraph("Database Engine");
-                databaseGraph.addPlotter(new Metrics.Plotter(physicalDatabase.getType().toString()) {
-                    @Override
-                    public int getValue() {
-                        return 1;
-                    }
-                });
-
-                metrics.start();
-            } catch (IOException e) {
-                log(e.getMessage());
+                return result;
             }
-        }
+        });
+        metrics.addCustomChart(a);
     }
 
     /**
