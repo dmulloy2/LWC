@@ -185,7 +185,7 @@ public class LWCBlockListener implements Listener {
 
         if (protection == null) {
             return;
-        } else if (!blockMatches(protection.getBlockId(), block.getType())) {
+        } else if (protection.getBlockType() != block.getType()) {
             // this block is no longer the block that's supposed to be protected
             protection.remove();
             return;
@@ -204,7 +204,7 @@ public class LWCBlockListener implements Listener {
                 // if they destroyed the protected block we want to move it aye?
                 if (lwc.blockEquals(protection.getBlock(), block)) {
                     // correct the block
-                    protection.setBlockId(LegacyMaterials.getOldId(block.getType()));
+                    protection.setBlockId(lwc.getPhysicalDatabase().getTypeId(block.getType()));
                     protection.setX(doubleChest.getX());
                     protection.setY(doubleChest.getY());
                     protection.setZ(doubleChest.getZ());
@@ -245,7 +245,7 @@ public class LWCBlockListener implements Listener {
      * @return 
      */
     static boolean blockMatches(int blockID, Material blockMat) {
-        return LegacyMaterials.getNewMaterial(blockID) == blockMat;
+        return LWC.getInstance().getPhysicalDatabase().getType(blockID) == blockMat;
     }
 
     @EventHandler

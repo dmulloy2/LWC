@@ -28,6 +28,7 @@
 
 package com.griefcraft.io;
 
+import com.griefcraft.lwc.LWC;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
@@ -177,7 +178,7 @@ public class Backup {
                 short damage = inputStream.readShort();
 
                 // Create the stack
-                Material itemType = LegacyMaterials.getNewMaterial(itemId);
+                Material itemType = LWC.getInstance().getPhysicalDatabase().getType(itemId);
                 ItemStack itemStack = new ItemStack(itemType, amount, damage);
 
                 // add it to the block
@@ -240,7 +241,7 @@ public class Backup {
                 ItemStack stack = entry.getValue();
 
                 outputStream.writeShort(slot);
-                outputStream.writeShort(LegacyMaterials.getOldId(stack.getType()));
+                outputStream.writeShort(LWC.getInstance().getPhysicalDatabase().getTypeId(stack.getType()));
                 outputStream.writeShort(stack.getAmount());
                 outputStream.writeShort(stack.getDurability());
             }

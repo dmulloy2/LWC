@@ -31,7 +31,9 @@ package com.griefcraft.sql;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.griefcraft.cache.LRUCache;
@@ -47,6 +49,7 @@ import com.griefcraft.util.LegacyMaterials;
 import com.griefcraft.util.UUIDRegistry;
 import com.griefcraft.util.config.Configuration;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONArray;
@@ -210,7 +213,7 @@ public class PhysDB extends Database {
     }
 
     public int getProtectionCount(String player, Material blockType) {
-        return getProtectionCount(player, LegacyMaterials.getOldId(blockType));
+        return getProtectionCount(player, getTypeId(blockType));
     }
 
     /**
@@ -332,6 +335,19 @@ public class PhysDB extends Database {
             protections.add(column);
         }
 
+        Table types = new Table(this, "types");
+        {
+            column = new Column("id");
+            column.setType("INTEGER");
+            column.setPrimary(true);
+            types.add(column);
+
+            column = new Column("name");
+            column.setType("VARCHAR(255)");
+            column.setUnique(true);
+            types.add(column);
+        }
+
         Table history = new Table(this, "history");
         {
             column = new Column("id");
@@ -390,6 +406,7 @@ public class PhysDB extends Database {
         }
 
         protections.execute();
+        types.execute();
         history.execute();
         internal.execute();
 
@@ -489,6 +506,55 @@ public class PhysDB extends Database {
                 lwc.log("Added Trapped Chests to core.yml as default protectable (ENABLED & AUTO REGISTERED)");
                 lwc.log("Trapped chests are nearly the same as reg chests but can light up! They can also be double chests.");
                 lwc.log("If you DO NOT want this as protected, simply remove it from core.yml! (search/look for trapped_chests under protections -> blocks");
+            }
+
+            incrementDatabaseVersion();
+        }
+
+        if (databaseVersion == 6) {
+            lwc.log("Building Material type ID mapping... This might take a while!");
+            int checked = 0;
+            int added = 0;
+            // materials to add after with auto increment IDs
+            Set<Material> addLater = EnumSet.noneOf(Material.class);
+            for (Material material : Material.values()) {
+                checked++;
+                if (checked % 100 == 0) {
+                    lwc.log(checked + "/" + Material.values().length + " checked...");
+                }
+                if (material.isLegacy()) {
+                    setTypeId(material.name(), material.getId());
+                    LWC.getInstance().getMaterialCache().addTypeId(material, material.getId());
+                } else {
+                    Material legacy = Bukkit.getUnsafe().toLegacy(material);
+                    if (legacy != null) {
+                        String name = legacy.name().substring(Material.LEGACY_PREFIX.length());
+                        // Check if names are similar. This should avoid issues with blocks that used data values before.
+                        if (name.equals(material.name()) || name.contains(material.name()) || material.name().contains(name)) {
+                            added++;
+                            if (added % 100 == 0) {
+                                lwc.log(added + "/" + Material.values().length + " added...");
+                            }
+                            setTypeId(material.name(), legacy.getId());
+                            LWC.getInstance().getMaterialCache().addTypeId(material, legacy.getId());
+                        } else {
+                            // if not similar add them later
+                            addLater.add(material);
+                        }
+                    } else {
+                        // no legacy ID found, add it later
+                        addLater.add(material);
+                    }
+                }
+            }
+
+            // add using auto increment IDs
+            for (Material material : addLater) {
+                added++;
+                if (added % 100 == 0) {
+                    lwc.log(added + "/" + Material.values().length + " added...");
+                }
+                addType(material);
             }
 
             incrementDatabaseVersion();
@@ -1117,7 +1183,7 @@ public class PhysDB extends Database {
     }
 
     public Protection registerProtection(Material blockType, Protection.Type type, String world, String player, String data, int x, int y, int z) {
-        return registerProtection(LegacyMaterials.getOldId(blockType), type, world, player, data, x, y, z);
+        return registerProtection(getTypeId(blockType), type, world, player, data, x, y, z);
     }
 
     @Deprecated
@@ -1173,6 +1239,125 @@ public class PhysDB extends Database {
         }
 
         return null;
+    }
+
+    /**
+     * Set the type id in the types table
+     *
+     * @param type  The material type name
+     * @param id    The numeric ID to use in the protections table
+     */
+    private void setTypeId(String type, int id) {
+        try {
+            PreparedStatement statement = prepare("INSERT INTO " + prefix +"types (id, name) VALUES (?, ?)");
+            statement.setInt(1, id);
+            statement.setString(2, type);
+
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            // Already exists
+            try {
+                PreparedStatement statement = prepare("UPDATE " + prefix + "types SET id = ? WHERE name = ?");
+                statement.setInt(1, id);
+                statement.setString(2, type);
+
+                statement.executeUpdate();
+            } catch (SQLException ex) {
+                // Something bad went wrong
+                printException(ex);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Add a type. If it's already cached it will return the cached one instead of adding a new one
+     *
+     * @param type  The material type
+     * @return      The generated or existing ID of that type; -2 if an error occured
+     */
+    private int addType(Material type) {
+        try {
+            PreparedStatement statement = prepare("INSERT INTO " + prefix +"types (name) VALUES (?)", true);
+            statement.setString(1, type.name());
+
+            statement.executeUpdate();
+            ResultSet set = statement.getGeneratedKeys();
+            int id = -1;
+            if (set.next()) {
+                id = set.getInt(1);
+                LWC.getInstance().getMaterialCache().addTypeId(type, id);
+            }
+            set.close();
+            return id;
+        } catch (SQLException e) {
+            return -1;
+            // Already exists
+        }
+    }
+
+    /**
+     * Get the internal database ID of a material
+     *
+     * @param type  The material to get the ID for
+     * @return      The ID or -1 if none was found
+     */
+    public int getTypeId(Material type) {
+        int id = LWC.getInstance().getMaterialCache().getId(type);
+        if (id > -1) {
+            return id;
+        }
+        try {
+            PreparedStatement statement = prepare("SELECT id FROM " + prefix + "types WHERE name = ?");
+            statement.setString(1, type.name());
+
+            ResultSet set = statement.executeQuery();
+
+            if (set.next()) {
+                id = set.getInt("id");
+            }
+
+            set.close();
+        } catch (SQLException e) {
+            printException(e);
+        }
+        if (id > -1) {
+            LWC.getInstance().getMaterialCache().addTypeId(type, id);
+        } else {
+            id = addType(type);
+        }
+        return id;
+    }
+
+    /**
+     * Get the material from the internal database ID
+     *
+     * @param id    The ID to get the type for
+     * @return      The ID or -1 if none was found
+     */
+    public Material getType(int id) {
+        Material type = LWC.getInstance().getMaterialCache().getType(id);
+        if (type != null) {
+            return type;
+        }
+        try {
+            PreparedStatement statement = prepare("SELECT name FROM " + prefix + "types WHERE id = ?");
+            statement.setInt(1, id);
+
+            ResultSet set = statement.executeQuery();
+
+            if (set.next()) {
+                type = Material.getMaterial(set.getString("name"));
+            }
+
+            set.close();
+        } catch (SQLException e) {
+            printException(e);
+        }
+        if (type != null) {
+            LWC.getInstance().getMaterialCache().addTypeId(type, id);
+        }
+        return type;
     }
 
     /**

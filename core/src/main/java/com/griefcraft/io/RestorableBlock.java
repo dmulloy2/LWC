@@ -109,7 +109,7 @@ public class RestorableBlock implements Restorable {
                 Block block = bworld.getBlockAt(x, y, z);
 
                 // Begin screwing with shit :p
-                block.setType(LegacyMaterials.getNewMaterial(id));
+                block.setType(lwc.getPhysicalDatabase().getType(id));
                 block.getState().setRawData((byte) data);
                 block.getState().update();
 
@@ -150,7 +150,7 @@ public class RestorableBlock implements Restorable {
         }
 
         RestorableBlock rblock = new RestorableBlock();
-        rblock.id = LegacyMaterials.getOldId(block.getType());
+        rblock.id = LWC.getInstance().getPhysicalDatabase().getTypeId(block.getType());
         rblock.world = block.getWorld().getName();
         rblock.x = block.getX();
         rblock.y = block.getY();

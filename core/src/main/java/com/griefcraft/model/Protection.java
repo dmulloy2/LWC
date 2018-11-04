@@ -608,7 +608,7 @@ public class Protection {
             return false;
         }
 
-        return LegacyMaterials.getNewMaterial(blockId) == block.getType();
+        return getBlockType() == block.getType();
     }
 
     public JSONObject getData() {
@@ -617,6 +617,10 @@ public class Protection {
 
     public int getBlockId() {
         return blockId;
+    }
+
+    public Material getBlockType() {
+        return LWC.getInstance().getPhysicalDatabase().getType(blockId);
     }
 
     public String getPassword() {

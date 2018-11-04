@@ -52,6 +52,11 @@ class Column {
     private boolean primary = false;
 
     /**
+     * If the content should be unique
+     */
+    private boolean unique = false;
+
+    /**
      * The table this column is assigned to
      */
     private Table table;
@@ -111,5 +116,13 @@ class Column {
 
     public boolean shouldAutoIncrement() {
         return autoIncrement;
+    }
+
+    public void setUnique(boolean unique) {
+        this.unique = unique;
+    }
+
+    public boolean isUnique() {
+        return unique;
     }
 }

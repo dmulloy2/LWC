@@ -107,6 +107,10 @@ public class Table {
                 buffer.append("PRIMARY KEY ");
             }
 
+            if (column.isUnique()) {
+                buffer.append("UNIQUE ");
+            }
+
             if (column.shouldAutoIncrement() && database.getType() == Type.MySQL) {
                 buffer.append("AUTO_INCREMENT ");
             }

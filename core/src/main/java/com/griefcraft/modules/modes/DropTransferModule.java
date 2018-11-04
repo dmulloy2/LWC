@@ -207,8 +207,8 @@ public class DropTransferModule extends JavaModule {
         if (!canAccess) {
             lwc.sendLocale(player, "protection.interact.dropxfer.noaccess");
         } else {
-            int blockId = protection.getBlockId();
-            if (blockId != Material.CHEST.getId() && blockId != Material.TRAPPED_CHEST.getId()) {
+            Material blockType = protection.getBlockType();
+            if (blockType != Material.CHEST && blockType != Material.TRAPPED_CHEST) {
                 lwc.sendLocale(player, "protection.interact.dropxfer.notchest");
                 player.removeAllActions();
                 event.setResult(Result.CANCEL);

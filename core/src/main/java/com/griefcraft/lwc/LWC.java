@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.griefcraft.cache.MaterialCache;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
@@ -176,6 +177,11 @@ public class LWC {
     private final ProtectionCache protectionCache;
 
     /**
+     * The type id mapping cache
+     */
+    private final MaterialCache materialCache;
+
+    /**
      * Physical database instance
      */
     private PhysDB physicalDatabase;
@@ -222,6 +228,7 @@ public class LWC {
         fastHoppers = configuration.getBoolean("optional.fastHopperProtection", false);
         alternativeHoppers = configuration.getBoolean("optional.alternativeHopperProtection", false);
         protectionCache = new ProtectionCache(this);
+        materialCache = new MaterialCache(this);
         backupManager = new BackupManager();
         moduleLoader = new ModuleLoader(this);
     }
@@ -256,7 +263,7 @@ public class LWC {
         if (id > EntityBlock.ENTITY_BLOCK_ID) {
             return entityToString(EntityType.fromId(id - EntityBlock.ENTITY_BLOCK_ID));
         }
-        return materialToString(LegacyMaterials.getNewMaterial(id));
+        return materialToString(getInstance().getPhysicalDatabase().getType(id));
     }
 
     /**
@@ -666,7 +673,7 @@ public class LWC {
             return true;
         }
 
-        int legacyId = LegacyMaterials.getOldId(block.getType());
+        int legacyId = LWC.getInstance().getPhysicalDatabase().getTypeId(block.getType());
 
         // support for old protection dbs that do not contain the block id
         if (protection.getBlockId() <= 0 && legacyId != protection.getBlockId()) {
@@ -810,12 +817,20 @@ public class LWC {
                         continue;
                     }
 
+                    // Item in hand
+                    Material inHand = player.getInventory().getItemInMainHand().getType();
+
                     // Get the item they need to have
-                    int item = Integer.parseInt(permission.getName());
+                    Material item = Material.matchMaterial(permission.getName());
+                    if (item == null) {
+                        try {
+                            int itemId = Integer.parseInt(permission.getName());
+                            item = LWC.getInstance().getPhysicalDatabase().getType(itemId);
+                        } catch (NumberFormatException ignored) {}
+                    }
 
                     // Are they wielding it?
-                    int legacyId = LegacyMaterials.getOldId(player.getInventory().getItemInMainHand().getType());
-                    if (legacyId == item) {
+                    if (inHand == item) {
                         return true;
                     }
                 }
@@ -2122,6 +2137,13 @@ public class LWC {
      */
     public ProtectionCache getProtectionCache() {
         return protectionCache;
+    }
+
+    /**
+     * @return the material cache
+     */
+    public MaterialCache getMaterialCache() {
+        return materialCache;
     }
 
     /**
