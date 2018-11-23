@@ -200,7 +200,9 @@ public class DoorsModule extends JavaModule {
      */
     private void changeDoorStates(boolean allowDoorToOpen, Block... doors) {
         for (Block door : doors) {
-            if (door == null) {
+            // We cannot assume that door is actually a door
+        	// (because a door could have been destroyed before an auto-close task fires)
+            if (door == null || !(door.getBlockData() instanceof Door)) {
                 continue;
             }
 
