@@ -37,9 +37,8 @@ import com.griefcraft.scripting.event.LWCCommandEvent;
 import com.griefcraft.scripting.event.LWCProtectionRegisterEvent;
 import com.griefcraft.util.Colors;
 import com.griefcraft.util.config.Configuration;
-import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.internal.permission.RegionPermissionModel;
@@ -159,8 +158,8 @@ public class WorldGuard extends JavaModule {
             return;
         }
 
-        BlockVector minimum = region.getMinimumPoint();
-        BlockVector maximum = region.getMaximumPoint();
+        BlockVector3 minimum = region.getMinimumPoint();
+        BlockVector3 maximum = region.getMaximumPoint();
 
         // Min values
         int minBlockX = minimum.getBlockX();
@@ -274,7 +273,11 @@ public class WorldGuard extends JavaModule {
                 } else {
                     // World specified. Partition the string and look up the world.
                     String worldName = regionName.substring(c + 1);
-                    world = worldGuard.getPlatform().getWorldByName(worldName);
+                    World bukkitWorld = event.getLWC().getPlugin().getServer().getWorld(worldName);
+                    if (bukkitWorld == null) {
+                        continue;
+                    }
+                    world = BukkitAdapter.adapt(bukkitWorld);
                     regionName = regionName.substring(0, c);
                 }
                 if (world == null) {
@@ -337,7 +340,7 @@ public class WorldGuard extends JavaModule {
         }
 
         // Create a vector for the region
-        Vector vector = BukkitAdapter.asVector(block.getLocation());
+        BlockVector3 vector = BukkitAdapter.asBlockVector(block.getLocation());
 
         // Load the regions the block encompasses
         List<String> regions = regionManager.getApplicableRegionsIDs(vector);
