@@ -30,11 +30,6 @@
             <id>sk89q-repo</id>
             <url>http://maven.sk89q.com/repo/</url>
         </repository>
-        <!-- Temporary WE and WG 7 repo, sk89q's doesn't include it yet -->
-        <repository>
-            <id>elmakers-repo</id>
-            <url>http://maven.elmakers.com/repository/</url>
-        </repository>
     </repositories>
 
     <dependencies>
