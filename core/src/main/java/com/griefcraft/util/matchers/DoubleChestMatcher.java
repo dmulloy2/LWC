@@ -28,10 +28,10 @@
 
 package com.griefcraft.util.matchers;
 
+import com.griefcraft.lwc.LWC;
 import com.griefcraft.util.ProtectionFinder;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 
 import java.util.EnumSet;
@@ -47,11 +47,6 @@ public class DoubleChestMatcher implements ProtectionFinder.Matcher {
      */
     public static final Set<Material> PROTECTABLES_CHESTS = EnumSet.of(Material.CHEST, Material.TRAPPED_CHEST);
 
-    /**
-     * Possible faces around the base block that protections could be at
-     */
-    public static final BlockFace[] POSSIBLE_FACES = new BlockFace[]{ BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
-
     public boolean matches(ProtectionFinder finder) {
         BlockState baseBlockState = finder.getBaseBlock();
         Block block = baseBlockState.getBlock();
@@ -61,14 +56,10 @@ public class DoubleChestMatcher implements ProtectionFinder.Matcher {
             return false;
         }
 
-        for (BlockFace face : POSSIBLE_FACES) {
-            Block relative = block.getRelative(face);
-
-            // we only want chests
-            if (baseBlockState.getType() == relative.getType()) {
-                finder.addBlock(relative);
-                return true;
-            }
+        Block otherChest = LWC.findAdjacentDoubleChest(block);
+        if(otherChest != null) {
+            finder.addBlock(otherChest);
+            return true;
         }
 
         return false;

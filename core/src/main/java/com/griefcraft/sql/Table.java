@@ -42,12 +42,12 @@ public class Table {
     /**
      * The columns in the table
      */
-    private List<Column> columns;
+    private final List<Column> columns;
 
     /**
      * The database object associated with this table
      */
-    private Database database;
+    private final Database database;
 
     /**
      * If this table is to be stored in memory
@@ -57,13 +57,13 @@ public class Table {
     /**
      * The table's name
      */
-    private String name;
+    private final String name;
 
     public Table(Database database, String name) {
         this.database = database;
         this.name = name;
 
-        columns = new ArrayList<Column>();
+        columns = new ArrayList();
     }
 
     /**
@@ -95,7 +95,7 @@ public class Table {
         buffer.append(" ( ");
 
         // add the columns
-        for (int index = 0; index < columns.size(); index++) {
+        for (int index = 0; index < columns.size(); ++index) {
             Column column = columns.get(index);
 
             buffer.append(column.getName());

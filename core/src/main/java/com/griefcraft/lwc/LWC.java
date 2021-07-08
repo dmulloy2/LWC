@@ -51,14 +51,12 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.block.Furnace;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Chest;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.FurnaceInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -141,8 +139,6 @@ import com.griefcraft.util.*;
 import com.griefcraft.util.config.Configuration;
 import com.griefcraft.util.locale.LocaleUtil;
 import com.griefcraft.util.matchers.DoubleChestMatcher;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 
 public class LWC {
 
@@ -256,17 +252,6 @@ public class LWC {
     }
 
     /**
-     * Get a string representation of a block type
-     */
-    @Deprecated
-    public static String materialToString(int id) {
-        if (id > EntityBlock.ENTITY_BLOCK_ID) {
-            return entityToString(EntityType.fromId(id - EntityBlock.ENTITY_BLOCK_ID));
-        }
-        return materialToString(getInstance().getPhysicalDatabase().getType(id));
-    }
-
-    /**
      * Get a string representation of a block material
      *
      * @param material
@@ -370,12 +355,33 @@ public class LWC {
      * @param block
      * @return
      */
-    public Block findAdjacentDoubleChest(Block block) {
-        if (!DoubleChestMatcher.PROTECTABLES_CHESTS.contains(block.getType())) {
-            throw new UnsupportedOperationException("findAdjacentDoubleChest() cannot be called on a: " + block.getType());
+    public static Block findAdjacentDoubleChest(Block block) {
+        final BlockData d = block.getBlockData();
+        if (d instanceof Chest) {
+            final Chest c = (Chest) d;
+            if(c.getType() != Chest.Type.SINGLE) {
+                // this is a double chest - check the other chest for registration data
+                Block other = null;
+                switch(c.getFacing()) {
+                    case SOUTH:
+                        other = block.getRelative(c.getType() != Chest.Type.RIGHT ? BlockFace.WEST : BlockFace.EAST);
+                        break;
+                    case NORTH:
+                        other = block.getRelative(c.getType() != Chest.Type.RIGHT ? BlockFace.EAST : BlockFace.WEST);
+                        break;
+                    case EAST:
+                        other = block.getRelative(c.getType() != Chest.Type.RIGHT ? BlockFace.SOUTH : BlockFace.NORTH);
+                        break;
+                    case WEST:
+                        other = block.getRelative(c.getType() != Chest.Type.RIGHT ? BlockFace.NORTH : BlockFace.SOUTH);
+                }
+                // double-check
+                if (other != null && other.getType() == block.getType()) {
+                    return other;
+                }
+            }
         }
-
-        return findAdjacentBlock(block, block.getType());
+        return null;
     }
 
     /**
@@ -495,7 +501,7 @@ public class LWC {
 
         BlockState blockState;
 
-        if ((blockState = block.getState()) != null && (blockState instanceof InventoryHolder)) {
+        if ((blockState = block.getState()) instanceof InventoryHolder) {
             Block doubleChestBlock = null;
             InventoryHolder holder = (InventoryHolder) blockState;
 
@@ -544,53 +550,6 @@ public class LWC {
         }
 
         return new HashMap<>();
-    }
-
-    /**
-     * Find a block that is adjacent to another block given a Material
-     *
-     * @param block
-     * @param material
-     * @param ignore
-     * @return
-     */
-    public Block findAdjacentBlock(Block block, Material material, Block... ignore) {
-        BlockFace[] faces = new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
-        List<Block> ignoreList = Arrays.asList(ignore);
-
-        for (BlockFace face : faces) {
-            Block adjacentBlock = block.getRelative(face);
-
-            if (adjacentBlock.getType() == material && !ignoreList.contains(adjacentBlock)) {
-                return adjacentBlock;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Find a block that is adjacent to another block on any of the block's 6
-     * sides given a Material
-     *
-     * @param block
-     * @param material
-     * @param ignore
-     * @return
-     */
-    public Block findAdjacentBlockOnAllSides(Block block, Material material, Block... ignore) {
-        BlockFace[] faces = new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN};
-        List<Block> ignoreList = Arrays.asList(ignore);
-
-        for (BlockFace face : faces) {
-            Block adjacentBlock = block.getRelative(face);
-
-            if (adjacentBlock.getType() == material && !ignoreList.contains(adjacentBlock)) {
-                return adjacentBlock;
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -664,21 +623,23 @@ public class LWC {
      * @param player
      * @param protection
      * @param block
+     * @param hasAccess
+     * @param notice     Should this method print a notice to the player? (some events may call this several times)
      * @return true if the player was granted access
      */
-    public boolean enforceAccess(Player player, Protection protection, Block block, boolean hasAccess) {
+    public boolean enforceAccess(Player player, Protection protection, Block block, boolean hasAccess, boolean notice) {
         MessageParser parser = plugin.getMessageParser();
 
         if (block == null || protection == null) {
             return true;
         }
 
-        int legacyId = block instanceof EntityBlock ? ((EntityBlock) block).getTypeId() :
-				LWC.getInstance().getPhysicalDatabase().getTypeId(block.getType());
+        String blockType = block instanceof EntityBlock ? ((EntityBlock) block).getTypeString() :
+                block.getType().name();
 
         // support for old protection dbs that do not contain the block id
-        if (protection.getBlockId() <= 0 && legacyId != protection.getBlockId()) {
-            protection.setBlockId(legacyId);
+        if (protection.getBlockTypeString() == null && blockType != null) {
+            protection.setBlockType(blockType);
             protection.save();
         }
 
@@ -699,7 +660,7 @@ public class LWC {
             }
         }
 
-        boolean permShowNotices = hasPermission(player, "lwc.shownotices");
+        boolean permShowNotices = notice && hasPermission(player, "lwc.shownotices");
         if ((permShowNotices && configuration.getBoolean("core.showNotices", true))
                 && !Boolean.parseBoolean(resolveProtectionConfiguration(block, "quiet"))) {
             boolean isOwner = protection.isOwner(player);
@@ -753,7 +714,7 @@ public class LWC {
      * @return true if the player was granted access
      */
     public boolean enforceAccess(Player player, Protection protection, Entity entity, boolean hasAccess) {
-        return enforceAccess(player, protection, new EntityBlock(entity), hasAccess);
+        return enforceAccess(player, protection, new EntityBlock(entity), hasAccess, true);
     }
 
     /**
@@ -823,12 +784,6 @@ public class LWC {
 
                     // Get the item they need to have
                     Material item = Material.matchMaterial(permission.getName());
-                    if (item == null) {
-                        try {
-                            int itemId = Integer.parseInt(permission.getName());
-                            item = LWC.getInstance().getPhysicalDatabase().getType(itemId);
-                        } catch (NumberFormatException ignored) {}
-                    }
 
                     // Are they wielding it?
                     if (inHand == item) {
@@ -1012,8 +967,8 @@ public class LWC {
      * @return
      */
     public int fastRemoveProtections(CommandSender sender, String where, boolean shouldRemoveBlocks) {
-        List<Integer> exemptedBlocks = configuration.getIntList("optional.exemptBlocks", new ArrayList<Integer>());
-        List<Integer> toRemove = new LinkedList<Integer>();
+        List<String> exemptedBlocks = configuration.getStringList("optional.exemptBlocks", new ArrayList());
+        List<Integer> toRemove = new LinkedList();
         List<Block> removeBlocks = null;
         int totalProtections = physicalDatabase.getProtectionCount();
         int completed = 0;
@@ -1023,7 +978,7 @@ public class LWC {
         databaseThread.flush();
 
         if (shouldRemoveBlocks) {
-            removeBlocks = new LinkedList<Block>();
+            removeBlocks = new LinkedList();
         }
 
         if (where != null && !where.trim().isEmpty()) {
@@ -1044,14 +999,14 @@ public class LWC {
             String prefix = physicalDatabase.getPrefix();
 
             ResultSet result = closer.register(resultStatement.executeQuery(
-                    "SELECT id, owner, type, x, y, z, data, blockId, world, password, date, last_accessed FROM "
+                    "SELECT id, owner, type, x, y, z, data, blockType, world, password, date, last_accessed FROM "
                     + prefix + "protections" + where));
             while (result.next()) {
                 Protection protection = physicalDatabase.resolveProtection(result);
                 World world = protection.getBukkitWorld();
 
                 // check if the protection is exempt from being removed
-                if (protection.hasFlag(Flag.Type.EXEMPTION) || exemptedBlocks.contains(protection.getBlockId())) {
+                if (protection.hasFlag(Flag.Type.EXEMPTION) || exemptedBlocks.contains(protection.getBlockTypeString())) {
                     continue;
                 }
 
@@ -1124,8 +1079,9 @@ public class LWC {
                     deleteProtectionsQuery.append("DELETE FROM ").append(prefix).append("protections WHERE id IN (")
                             .append(protectionId);
                     deleteHistoryQuery.append("UPDATE ").append(prefix)
-                            .append("history SET status = " + History.Status.INACTIVE.ordinal()
-                                    + " WHERE protectionId IN(").append(protectionId);
+                            .append("history SET status = ")
+                                     .append(String.valueOf(History.Status.INACTIVE.ordinal()))
+                                     .append(" WHERE protectionId IN(").append(protectionId);
                 } else {
                     deleteProtectionsQuery.append(",").append(protectionId);
                     deleteHistoryQuery.append(",").append(protectionId);
@@ -1142,7 +1098,7 @@ public class LWC {
                     sender.sendMessage(Colors.Green + "REMOVED " + (count + 1) + " / " + total);
                 }
 
-                count++;
+                ++count;
                 physicalDatabase.decrementProtectionCount();
             }
         } catch (SQLException ex) {
@@ -1413,6 +1369,20 @@ public class LWC {
         return Boolean.parseBoolean(resolveProtectionConfiguration(block, "enabled"));
     }
 
+
+    /**
+     * Check a block to see if it is protectable
+     *
+     * @param entity
+     * @return
+     */
+    public boolean isProtectable(Entity entity) {
+        if (entity == null) {
+            return false;
+        } 
+        return Boolean.parseBoolean(resolveProtectionConfiguration(entity.getType(), "enabled"));
+    }
+
     /**
      * Check a block to see if it is protectable
      *
@@ -1461,11 +1431,9 @@ public class LWC {
 
         List<String> names = new ArrayList<>();
 
-        String materialName = entity.toString().toLowerCase();
-
         // add the name & the block id
-        names.add(materialName);
-        names.add(entity.getTypeId() + "");
+        names.add(entity.toString().toLowerCase());
+        names.add(EntityBlock.calcTypeString(entity).toLowerCase());
 
         // Add the wildcards last so it can be overriden
         names.add("*");
@@ -1504,26 +1472,32 @@ public class LWC {
             return protectionConfigurationCache.get(cacheKey);
         }
 
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList();
 
         String materialName = normalizeMaterialName(material);
 
         // add the name & the block id
         names.add(materialName);
-        names.add(material.getId() + "");
-        names.add(material.getId() + ":" + block.getData());
         names.add(materialName + ":" + block.getData());
 
         if (!materialName.equals(material.toString().toLowerCase())) {
             names.add(material.toString().toLowerCase());
+            names.add(material.name().toLowerCase() + ":" + block.getData());
         }
 
         // Add the wildcards last so it can be overriden
         names.add("*");
-        names.add(material.getId() + ":*");
+        names.add(materialName + ":*");
+        if (!materialName.equals(material.toString().toLowerCase())) {
+            names.add(material.name().toLowerCase() + ":*");
+        }
 
         if (materialName.contains("_")) { // Prefix wildcarding for shulker boxes & gates
-            names.add("*_" + materialName.substring(materialName.indexOf("_") + 1));
+            int i = materialName.indexOf("_") + 1;
+            while(i > 0) {
+                names.add("*_" + materialName.substring(i));
+                i = materialName.indexOf("_", i) + 1;
+            }
         }
 
         String value = configuration.getString("protections." + node);
@@ -1554,23 +1528,25 @@ public class LWC {
             return protectionConfigurationCache.get(cacheKey);
         }
 
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList();
 
         String materialName = normalizeMaterialName(material);
 
         // add the name & the block id
         names.add(materialName);
-        names.add(material.getId() + "");
-        names.add(material.getId() + ":" + state.getRawData());
         names.add(materialName + ":" + state.getRawData());
 
         if (!materialName.equals(material.toString().toLowerCase())) {
-            names.add(material.toString().toLowerCase());
+            names.add(material.name().toLowerCase());
+            names.add(material.name().toLowerCase() + ":" + state.getRawData());
         }
 
         // Add the wildcards last so it can be overriden
         names.add("*");
-        names.add(material.getId() + ":*");
+        names.add(materialName + ":*");
+        if (!materialName.equals(material.toString().toLowerCase())) {
+            names.add(material.name().toLowerCase() + ":*");
+        }
 
         if (materialName.contains("_")) { // Prefix wildcarding for shulker boxes & gates
             names.add("*_" + materialName.substring(materialName.indexOf("_") + 1));
@@ -1602,13 +1578,13 @@ public class LWC {
             return protectionConfigurationCache.get(cacheKey);
         }
 
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList();
 
         String materialName = normalizeMaterialName(material);
 
         // add the name & the block id
+        names.add(material.name().toLowerCase());
         names.add(materialName);
-        names.add(material.getId() + "");
 
         if (!materialName.equals(material.toString().toLowerCase())) {
             names.add(material.toString().toLowerCase());
@@ -1616,7 +1592,6 @@ public class LWC {
 
         // Add the wildcards last so it can be overriden
         names.add("*");
-        names.add(material.getId() + ":*");
 
         String value = configuration.getString("protections." + node);
 
@@ -1671,6 +1646,8 @@ public class LWC {
                 return;
             }
             physicalDatabase.load();
+            // adding this for compatibility with older protection caches
+            physicalDatabase.loadLegacyMaterials(materialCache);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Tyler Blair. All rights reserved.
+ * Copyright 2019 Jacob Scott.
  *
  * Redistribution and use in source and binary forms, with or without modification, are
  * permitted provided that the following conditions are met:
@@ -30,23 +30,23 @@ package com.griefcraft.scripting.event;
 
 import com.griefcraft.scripting.Module;
 import com.griefcraft.scripting.ModuleLoader;
-import org.bukkit.block.Block;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.Set;
+import org.bukkit.entity.Entity;
 
-public class LWCBlockInteractEvent extends LWCPlayerEvent implements IResult {
+public class LWCEntityInteractEvent extends LWCPlayerEvent implements IResult {
 
     private final PlayerInteractEvent event;
-    private final Block block;
+    private final Entity entity;
     private final Set<String> actions;
     private Module.Result result = Module.Result.DEFAULT;
 
-    public LWCBlockInteractEvent(PlayerInteractEvent event, Block block, Set<String> actions) {
-        super(ModuleLoader.Event.INTERACT_BLOCK, event.getPlayer());
+    public LWCEntityInteractEvent(PlayerInteractEvent event, Entity entity, Set<String> actions) {
+        super(ModuleLoader.Event.INTERACT_ENTITY, event.getPlayer());
 
         this.event = event;
-        this.block = block;
+        this.entity = entity;
         this.actions = actions;
     }
 
@@ -60,8 +60,8 @@ public class LWCBlockInteractEvent extends LWCPlayerEvent implements IResult {
         return actions.contains(action);
     }
 
-    public Block getBlock() {
-        return block;
+    public Entity getEntity() {
+        return entity;
     }
 
     public Set<String> getActions() {

@@ -30,7 +30,6 @@ package com.griefcraft.io;
 
 import com.griefcraft.bukkit.EntityBlock;
 import com.griefcraft.lwc.LWC;
-import com.griefcraft.util.LegacyMaterials;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
@@ -43,13 +42,15 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.bukkit.Material;
 
 public class RestorableBlock implements Restorable {
 
     /**
      * The block id
      */
-    private int id;
+    private String blockTypeStr;
+    private Material blockType;
 
     /**
      * The world's name
@@ -81,8 +82,8 @@ public class RestorableBlock implements Restorable {
      */
     private final Map<Integer, ItemStack> items = new HashMap<Integer, ItemStack>();
 
-    public int getType() {
-        return 1; // TODO ENUM, HOPEFULLY I'LL REMEMBER IF I PUT THIS TODO EVERYWHERE
+    public Type getType() {
+        return Type.BLOCK;
     }
 
     public void restore() {
@@ -109,7 +110,7 @@ public class RestorableBlock implements Restorable {
                 Block block = bworld.getBlockAt(x, y, z);
 
                 // Begin screwing with shit :p
-                block.setType(lwc.getPhysicalDatabase().getType(id));
+                block.setType(blockType);
                 block.getState().setRawData((byte) data);
                 block.getState().update();
 
@@ -150,7 +151,7 @@ public class RestorableBlock implements Restorable {
         }
 
         RestorableBlock rblock = new RestorableBlock();
-        rblock.id = LWC.getInstance().getPhysicalDatabase().getTypeId(block.getType());
+        rblock.blockType = block.getType();
         rblock.world = block.getWorld().getName();
         rblock.x = block.getX();
         rblock.y = block.getY();
@@ -188,12 +189,22 @@ public class RestorableBlock implements Restorable {
         items.put(slot, stack);
     }
 
-    public int getId() {
-        return id;
+    public Material getBlockType() {
+        return blockType;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setBlockType(Material type) {
+        this.blockType = type;
+        this.blockTypeStr = type.name();
+    }
+
+    public void setBlockType(String blockType) {
+        this.blockType = Material.getMaterial(blockType);
+        this.blockTypeStr = blockType;
+    }
+
+    public String getBlockTypeString() {
+        return blockTypeStr;
     }
 
     public String getWorld() {

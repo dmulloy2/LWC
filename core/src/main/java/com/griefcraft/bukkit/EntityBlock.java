@@ -3,6 +3,7 @@ package com.griefcraft.bukkit;
 import java.util.Collection;
 import java.util.List;
 import org.bukkit.Bukkit;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
@@ -16,37 +17,48 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.BoundingBox;
+import org.bukkit.util.RayTraceResult;
+import org.bukkit.util.Vector;
 
 public class EntityBlock implements Block {
 	
+    @Deprecated
     public static final int ENTITY_BLOCK_ID = 5000;
     /**
      * To convert database offsets from Brokkonaut's fork in a foolproof manner, 
      * we're going to just flag any '5000' (unknown entity) as 6000, 
      * then convert them later when we encounter them
      */
+    @Deprecated
     public static final int UNKNOWN_ENTITY_BLOCK_ID = 6000;
     public static final int POSITION_OFFSET = 50000;
 
+    public static final String ENTITY_TYPE_PREFIX = "~ENTITY~";
+    public static final String UNKNOWN_ENTITY_TYPE = ENTITY_TYPE_PREFIX + "~";
+
     private final Entity entity;
-    private final int id, hash;
+    private final int hash;
+    private final String type;
     private final org.bukkit.World world;
 
     public EntityBlock(Entity entity) {
         this.entity = entity;
         if(entity != null) {
-            id = entity.getType().getTypeId();
+            //id = entity.getType().getTypeId();
+			   type = ENTITY_TYPE_PREFIX + entity.getType().name();
             hash = calcHash(entity.getUniqueId().hashCode());
             world = this.entity.getWorld();
         } else {
-            id = hash = 0;
+            hash = 0;
+				type = UNKNOWN_ENTITY_TYPE;
             world = null;
         }
     }
-    
-    public EntityBlock(String world, int id, int hash) {
+
+    public EntityBlock(String world, String type, int hash) {
         this.entity = null;
-        this.id = id;
+		  this.type = type;
         this.hash = hash;
         this.world = Bukkit.getWorld(world);
     }
@@ -61,7 +73,8 @@ public class EntityBlock implements Block {
     }
 
     public EntityType getEntityType() {
-        return entity != null ? entity.getType() : EntityType.fromId(id);
+        return entity != null ? entity.getType() :
+                (type.equals(UNKNOWN_ENTITY_TYPE) ? null : EntityType.valueOf(type.substring(ENTITY_TYPE_PREFIX.length())));
     }
 
     public static int calcHash(int hash) {
@@ -83,15 +96,16 @@ public class EntityBlock implements Block {
         return hash;
     }
 
-    public static int calcTypeId(Entity entity) {
-        final int typID = entity == null ? 0 : entity.getType().getTypeId();
-        return typID <= 0 ? UNKNOWN_ENTITY_BLOCK_ID : typID + ENTITY_BLOCK_ID;
+    public static String calcTypeString(Entity entity) {
+        return entity == null ? UNKNOWN_ENTITY_TYPE : ENTITY_TYPE_PREFIX + entity.getType().name();
     }
 
-    public int getTypeId() {
-        // don't accidentally shoot ourselves in the foot
-        final int typID = entity.getType().getTypeId();
-        return typID <= 0 ? UNKNOWN_ENTITY_BLOCK_ID : typID + ENTITY_BLOCK_ID;
+    public static String calcTypeString(EntityType entity) {
+        return entity == null ? UNKNOWN_ENTITY_TYPE : ENTITY_TYPE_PREFIX + entity.name();
+    }
+
+    public String getTypeString() {
+        return type;
     }
 
     public org.bukkit.World getWorld() {
@@ -185,7 +199,7 @@ public class EntityBlock implements Block {
     }
 
     public Location getLocation() {
-        return null;
+        return entity != null ? entity.getLocation() : null;
     }
 
     public Location getLocation(Location arg0) {
@@ -247,27 +261,31 @@ public class EntityBlock implements Block {
     public void setBiome(Biome arg0) {
     }
 
-    public void setData(byte arg0) {
-    }
-
-    public void setData(byte arg0, boolean arg1) {
-    }
-
     public void setType(Material arg0) {
     }
 
     public void setType(Material arg0, boolean arg1) {
     }
 
-    public boolean setTypeId(int arg0) {
-        return false;
+    public boolean isPassable() {
+        return true;
     }
 
-    public boolean setTypeId(int arg0, boolean arg1) {
-        return false;
+    public RayTraceResult rayTrace(Location lctn, Vector vector, double d, FluidCollisionMode fcm) {
+        return null;
     }
 
-    public boolean setTypeIdAndData(int arg0, byte arg1, boolean arg2) {
-        return false;
+    public BoundingBox getBoundingBox() {
+        return null;
     }
+
+	@Override
+	public boolean applyBoneMeal(BlockFace arg0) {
+		return false;
+	}
+
+	@Override
+	public Collection<ItemStack> getDrops(ItemStack arg0, Entity arg1) {
+		return null;
+	}
 }

@@ -29,7 +29,6 @@
 package com.griefcraft.util.matchers;
 
 import com.griefcraft.util.ProtectionFinder;
-import com.griefcraft.util.SetUtil;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -45,7 +44,7 @@ public class GravityMatcher implements ProtectionFinder.Matcher {
     /**
      * Blocks that are destroyed if the land below them is destroyed
      */
-    public static final Set<Material> PROTECTABLES_POSTS = EnumSet.of(Material.SIGN, Material.RAIL,
+    public static final Set<Material> PROTECTABLES_POSTS = EnumSet.of(Material.RAIL,
             Material.POWERED_RAIL, Material.DETECTOR_RAIL, Material.LEVER);
 
     public boolean matches(ProtectionFinder finder) {
@@ -59,7 +58,8 @@ public class GravityMatcher implements ProtectionFinder.Matcher {
 
         Material type = up.getType();
         String name = type.name();
-        if (PROTECTABLES_POSTS.contains(type) || name.contains("PRESSURE_PLATE") || name.contains("BANNER")
+        if (PROTECTABLES_POSTS.contains(type) || (name.contains("SIGN") && !name.contains("WALL"))
+               || name.contains("PRESSURE_PLATE") || name.contains("BANNER")
                || name.contains("BUTTON")) {
             finder.addBlock(up);
             return true;

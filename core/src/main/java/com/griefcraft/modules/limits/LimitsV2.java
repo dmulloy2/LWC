@@ -68,22 +68,22 @@ public class LimitsV2 extends JavaModule {
     /**
      * A map of the default limits
      */
-    private final List<Limit> defaultLimits = new LinkedList<Limit>();
+    private final List<Limit> defaultLimits = new LinkedList();
 
     /**
      * A map of all of the player limits
      */
-    private final Map<String, List<Limit>> playerLimits = new HashMap<String, List<Limit>>();
+    private final Map<String, List<Limit>> playerLimits = new HashMap();
 
     /**
      * A map of all of the group limits - downcasted to lowercase to simplify comparisons
      */
-    private final Map<String, List<Limit>> groupLimits = new HashMap<String, List<Limit>>();
+    private final Map<String, List<Limit>> groupLimits = new HashMap();
 
     /**
      * A map mapping string representations of materials to their Material counterpart
      */
-    private final Map<String, Material> materialCache = new HashMap<String, Material>();
+    private final Map<String, Material> materialCache = new HashMap();
 
     /**
      * A map mapping string representations of entity types to their EntityType counterpart
@@ -96,7 +96,6 @@ public class LimitsV2 extends JavaModule {
 
             // add the name & the block id
             materialCache.put(materialName, material);
-            materialCache.put(material.getId() + "", material);
 
             if (!materialName.equals(material.toString().toLowerCase())) {
                 materialCache.put(material.toString().toLowerCase(), material);
@@ -105,7 +104,7 @@ public class LimitsV2 extends JavaModule {
 
         for (EntityType entityType : EntityType.values()) {
             entityCache.put(entityType.toString().toLowerCase(), entityType);
-            entityCache.put(String.valueOf(EntityBlock.ENTITY_BLOCK_ID + entityType.getTypeId()), entityType);
+            entityCache.put(EntityBlock.calcTypeString(entityType), entityType);
         }
     }
 
@@ -185,7 +184,7 @@ public class LimitsV2 extends JavaModule {
 
         @Override
         public int getProtectionCount(Player player) {
-            return LWC.getInstance().getPhysicalDatabase().getProtectionCount(player.getName(), material.getId());
+            return LWC.getInstance().getPhysicalDatabase().getProtectionCount(player.getName(), material);
         }
 
         @Override
@@ -216,7 +215,7 @@ public class LimitsV2 extends JavaModule {
 
         @Override
         public int getProtectionCount(Player player) {
-            return LWC.getInstance().getPhysicalDatabase().getProtectionCount(player.getName(), EntityBlock.ENTITY_BLOCK_ID + entityType.getTypeId());
+            return LWC.getInstance().getPhysicalDatabase().getProtectionCount(player.getName(), EntityBlock.calcTypeString(entityType));
         }
 
         @Override
@@ -242,14 +241,12 @@ public class LimitsV2 extends JavaModule {
         @Override
         public int getProtectionCount(Player player) {
             LWC lwc = LWC.getInstance();
-            return lwc.getPhysicalDatabase().getProtectionCount(player.getName(), Material.SIGN)
-                    + lwc.getPhysicalDatabase().getProtectionCount(player.getName(), Material.WALL_SIGN);
+            return lwc.getPhysicalDatabase().getProtectionCountSimilar(player.getName(), "SIGN");
         }
 
         @Override
         public boolean accepts(String type) {
-            return Material.SIGN.toString().equalsIgnoreCase(type)
-                    || Material.WALL_SIGN.toString().equalsIgnoreCase(type);
+            return type.toLowerCase().contains("sign");
         }
 
         @Override
@@ -428,7 +425,7 @@ public class LimitsV2 extends JavaModule {
      * @return
      */
     private List<Limit> findLimitsViaPermissions(Player player) {
-        List<Limit> limits = new LinkedList<Limit>();
+        List<Limit> limits = new LinkedList();
 
         for (PermissionAttachmentInfo pai : player.getEffectivePermissions()) {
             String permission = pai.getPermission();
@@ -484,7 +481,7 @@ public class LimitsV2 extends JavaModule {
      */
     public List<Limit> getPlayerLimits(Player player) {
         LWC lwc = LWC.getInstance();
-        List<Limit> limits = new LinkedList<Limit>();
+        List<Limit> limits = new LinkedList();
 
         // get all of their own limits
         String playerName = player.getName().toLowerCase();
@@ -664,7 +661,7 @@ public class LimitsV2 extends JavaModule {
      * @return
      */
     private List<Limit> findLimits(String node) {
-        List<Limit> limits = new LinkedList<Limit>();
+        List<Limit> limits = new LinkedList();
         List<String> keys = configuration.getKeys(node);
 
         for (String key : keys) {

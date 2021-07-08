@@ -162,13 +162,12 @@ public class BackupManager {
                 if (count % 2000 == 0) {
                     System.out.println("[Backup] Restored restorables: " + count);
                 }
-                count ++;
+                ++count;
 
-                // TODO THIS IS HACKS :-( ALSO ENUM ENUM
-                if (restorable.getType() == 0) {
-                    protectionCount ++;
-                } else if (restorable.getType() == 1) {
-                    blockCount ++;
+                if (restorable.getType() == Restorable.Type.PROTECTION) {
+                    ++protectionCount;
+                } else if (restorable.getType() == Restorable.Type.BLOCK) {
+                    ++blockCount;
                 }
             }
 

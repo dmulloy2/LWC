@@ -202,9 +202,11 @@ public class LWCPlugin extends JavaPlugin {
         // Load the rest of LWC
         lwc.load();
 
-        try {
-            registerEvents();
-        } catch (NoSuchFieldError e) {
+        if(this.isEnabled()) {
+            try {
+                registerEvents();
+            } catch (NoSuchFieldError e) {
+            }
         }
     }
 

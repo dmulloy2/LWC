@@ -33,6 +33,7 @@ import com.griefcraft.model.Protection;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import org.bukkit.Material;
 
 public class RestorableProtection implements Restorable {
 
@@ -49,7 +50,8 @@ public class RestorableProtection implements Restorable {
     /**
      * The block id
      */
-    private int blockId;
+    private String blockTypeStr;
+    private Material blockType;
 
     /**
      * The protection owner
@@ -91,13 +93,13 @@ public class RestorableProtection implements Restorable {
      */
     private long updated;
 
-    public int getType() {
-        return 0; // TODO ENUM ENUM ENUM ENUM ENUM ENUM
+    public Type getType() {
+        return Type.PROTECTION;
     }
 
     public void restore() {
         LWC lwc = LWC.getInstance();
-        Protection protection = lwc.getPhysicalDatabase().registerProtection(blockId, Protection.Type.values()[protectionType],
+        Protection protection = lwc.getPhysicalDatabase().registerProtection(blockType, Protection.Type.values()[protectionType],
                 world, owner, data, x, y, z);
         // TODO fix the ID?
     }
@@ -116,8 +118,9 @@ public class RestorableProtection implements Restorable {
         try {
             RestorableProtection rprotection = new RestorableProtection();
             rprotection.id = protection.getId();
+            rprotection.blockType = protection.getBlockType();
             rprotection.protectionType = protection.getType().ordinal();
-            rprotection.blockId = protection.getBlockId();
+            rprotection.blockTypeStr = protection.getBlockTypeString();
             rprotection.owner = protection.getOwner();
             rprotection.world = protection.getWorld();
             rprotection.x = protection.getX();
@@ -142,6 +145,11 @@ public class RestorableProtection implements Restorable {
         this.id = id;
     }
 
+    @Override
+    public Material getBlockType() {
+        return blockType;
+    }
+
     public int getProtectionType() {
         return protectionType;
     }
@@ -150,12 +158,18 @@ public class RestorableProtection implements Restorable {
         this.protectionType = protectionType;
     }
 
-    public int getBlockId() {
-        return blockId;
+    public void setBlockType(Material type) {
+        this.blockType = type;
+        this.blockTypeStr = type.name();
     }
 
-    public void setBlockId(int blockId) {
-        this.blockId = blockId;
+    public void setBlockType(String blockType) {
+        this.blockType = Material.getMaterial(blockType);
+        this.blockTypeStr = blockType;
+    }
+
+    public String getBlockTypeString() {
+        return blockTypeStr;
     }
 
     public String getOwner() {

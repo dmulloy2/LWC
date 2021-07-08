@@ -118,22 +118,22 @@ public class Protection {
     /**
      * All of the history items associated with this protection
      */
-    private final Set<History> historyCache = new HashSet<History>();
+    private final Set<History> historyCache = new HashSet();
 
     /**
      * List of the permissions rights for the protection
      */
-    private final Set<Permission> permissions = new HashSet<Permission>();
+    private final Set<Permission> permissions = new HashSet();
 
     /**
      * List of flags enabled on the protection
      */
-    private final Map<Flag.Type, Flag> flags = new HashMap<Flag.Type, Flag>();
+    private final Map<Flag.Type, Flag> flags = new HashMap();
 
     /**
      * The block id
      */
-    private int blockId;
+    private String blockType;
 
     /**
      * The password for the chest
@@ -418,7 +418,7 @@ public class Protection {
      */
     public Set<History> getRelatedHistory() {
         // cache the database's history if we don't have any yet
-        if (historyCache.size() == 0) {
+        if (historyCache.isEmpty()) {
             historyCache.addAll(LWC.getInstance().getPhysicalDatabase().loadHistory(this));
         }
 
@@ -433,7 +433,7 @@ public class Protection {
      * @return
      */
     public List<History> getRelatedHistory(History.Type type) {
-        List<History> matches = new ArrayList<History>();
+        List<History> matches = new ArrayList();
         Set<History> relatedHistory = getRelatedHistory();
 
         for (History history : relatedHistory) {
@@ -615,12 +615,12 @@ public class Protection {
         return data;
     }
 
-    public int getBlockId() {
-        return blockId;
+    public String getBlockTypeString() {
+        return blockType;
     }
 
     public Material getBlockType() {
-        return LWC.getInstance().getPhysicalDatabase().getType(blockId);
+        return Material.getMaterial(blockType);
     }
 
     public String getPassword() {
@@ -663,12 +663,21 @@ public class Protection {
         return lastAccessed;
     }
 
-    public void setBlockId(int blockId) {
+    public void setBlockType(String type) {
         if (removed) {
             return;
         }
 
-        this.blockId = blockId;
+        this.blockType = type;
+        this.modified = true;
+    }
+
+    public void setBlockType(Material type) {
+        if (removed) {
+            return;
+        }
+
+        this.blockType = type.name();
         this.modified = true;
     }
 
@@ -836,9 +845,9 @@ public class Protection {
     public void radiusRemoveCache() {
         ProtectionCache cache = LWC.getInstance().getProtectionCache();
 
-        for (int x = -3; x <= 3; x++) {
-            for (int y = -3; y <= 3; y++) {
-                for (int z = -3; z <= 3; z++) {
+        for (int x = -3; x <= 3; ++x) {
+            for (int y = -3; y <= 3; ++y) {
+                for (int z = -3; z <= 3; ++z) {
                     String cacheKey = world + ":" + (this.x + x) + ":" + (this.y + y) + ":" + (this.z + z);
 
                     // get the protection for that entry
@@ -936,8 +945,8 @@ public class Protection {
     public Block getBlock() {
         if (cachedBlock != null) {
             return cachedBlock;
-        } else if(getBlockId() > EntityBlock.ENTITY_BLOCK_ID) {
-            return cachedBlock = new EntityBlock(world, getBlockId(), x);
+        } else if(blockType != null && blockType.startsWith(EntityBlock.ENTITY_TYPE_PREFIX)) {
+            return cachedBlock = new EntityBlock(world, blockType, x);
         }
 
         World world = getBukkitWorld();
@@ -973,7 +982,10 @@ public class Protection {
             lastAccessed += " ago";
         }
 
-        return String.format("%s %s" + Colors.White + " " + Colors.Green + "Id=%d Owner=%s Location=[%s %d,%d,%d] Created=%s Flags=%s LastAccessed=%s", typeToString(), (blockId > 0 ? (LWC.materialToString(blockId)) : "Not yet cached"), id, owner, world, x, y, z, creation, flagStr, lastAccessed);
+        return String.format("%s %s" + Colors.White + " " + Colors.Green
+                + "Id=%d Owner=%s Location=[%s %d,%d,%d] Created=%s Flags=%s LastAccessed=%s", 
+                typeToString(), (blockType == null ? "Not yet cached" : blockType), 
+                id, owner, world, x, y, z, creation, flagStr, lastAccessed);
     }
 
     /**
@@ -981,14 +993,6 @@ public class Protection {
      */
     public String typeToString() {
         return StringUtil.capitalizeFirstLetter(type.toString());
-    }
-
-    /**
-     * Updates the protection in the protection cache
-     */
-    @Deprecated
-    public void update() {
-        throw new UnsupportedOperationException("Protection.update() is no longer necessary!");
     }
 
 }

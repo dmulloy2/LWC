@@ -33,6 +33,7 @@ import com.griefcraft.scripting.event.LWCAccessEvent;
 import com.griefcraft.scripting.event.LWCBlockInteractEvent;
 import com.griefcraft.scripting.event.LWCCommandEvent;
 import com.griefcraft.scripting.event.LWCDropItemEvent;
+import com.griefcraft.scripting.event.LWCEntityInteractEvent;
 import com.griefcraft.scripting.event.LWCProtectionDestroyEvent;
 import com.griefcraft.scripting.event.LWCProtectionInteractEvent;
 import com.griefcraft.scripting.event.LWCProtectionRegisterEvent;
@@ -110,6 +111,13 @@ public interface Module {
      * @param event
      */
     public void onBlockInteract(LWCBlockInteractEvent event);
+
+    /**
+     * Called when an unprotected entity is interacted with
+     *
+     * @param event
+     */
+	public void onEntityInteract(LWCEntityInteractEvent event);
 
     /**
      * Called immediately before a protection is registered

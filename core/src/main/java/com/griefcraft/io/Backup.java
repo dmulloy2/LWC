@@ -28,6 +28,7 @@
 
 package com.griefcraft.io;
 
+import com.griefcraft.cache.MaterialCache;
 import com.griefcraft.lwc.LWC;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -42,8 +43,6 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import com.griefcraft.util.LegacyMaterials;
 
 public class Backup {
 
@@ -143,13 +142,12 @@ public class Backup {
         if (type == -1) {
             return null;
         }
-
-        // TODO enum that shit yo
-        if (type == 0) { // Protection
+        if (type == Restorable.Type.LEGACY_PROTECTION.ordinal()) { // Protection
+            MaterialCache cache = LWC.getInstance().getMaterialCache();
             RestorableProtection rprotection = new RestorableProtection();
             rprotection.setId(inputStream.readInt());
             rprotection.setProtectionType(inputStream.readByte());
-            rprotection.setBlockId(inputStream.readShort());
+            rprotection.setBlockType(cache.getType(inputStream.readShort()));
             rprotection.setOwner(inputStream.readUTF());
             rprotection.setWorld(inputStream.readUTF());
             rprotection.setX(inputStream.readInt());
@@ -160,9 +158,10 @@ public class Backup {
             rprotection.setUpdated(inputStream.readLong());
 
             return rprotection;
-        } else if (type == 1) { // Block
+        } else if (type == Restorable.Type.LEGACY_BLOCK.ordinal()) { // Block
+            MaterialCache cache = LWC.getInstance().getMaterialCache();
             RestorableBlock rblock = new RestorableBlock();
-            rblock.setId(inputStream.readShort());
+            rblock.setBlockType(cache.getType(inputStream.readShort()));
             rblock.setWorld(inputStream.readUTF());
             rblock.setX(inputStream.readInt());
             rblock.setY(inputStream.readShort());
@@ -178,14 +177,54 @@ public class Backup {
                 short damage = inputStream.readShort();
 
                 // Create the stack
-                Material itemType = LWC.getInstance().getPhysicalDatabase().getType(itemId);
+                Material itemType = cache.getType(itemId);
                 ItemStack itemStack = new ItemStack(itemType, amount, damage);
 
                 // add it to the block
                 rblock.setSlot(slot, itemStack);
             }
 
-            // Woo!
+            return rblock;
+        } else if (type == Restorable.Type.PROTECTION.ordinal()) { // Protection
+            RestorableProtection rprotection = new RestorableProtection();
+            rprotection.setId(inputStream.readInt());
+            rprotection.setProtectionType(inputStream.readByte());
+            rprotection.setBlockType(inputStream.readUTF());
+            rprotection.setOwner(inputStream.readUTF());
+            rprotection.setWorld(inputStream.readUTF());
+            rprotection.setX(inputStream.readInt());
+            rprotection.setY(inputStream.readShort());
+            rprotection.setZ(inputStream.readInt());
+            rprotection.setData(inputStream.readUTF());
+            rprotection.setCreated(inputStream.readLong());
+            rprotection.setUpdated(inputStream.readLong());
+
+            return rprotection;
+        } else if (type == Restorable.Type.BLOCK.ordinal()) { // Block
+            RestorableBlock rblock = new RestorableBlock();
+            rblock.setBlockType(inputStream.readUTF());
+            rblock.setWorld(inputStream.readUTF());
+            rblock.setX(inputStream.readInt());
+            rblock.setY(inputStream.readShort());
+            rblock.setZ(inputStream.readInt());
+            rblock.setData(inputStream.read() & 0xFF);
+            int itemCount = inputStream.readShort();
+
+            for (int i = 0; i < itemCount; ++i) {
+                // Read in us some RestorableItems
+                int slot = inputStream.readShort();
+                String itemType = inputStream.readUTF();
+                int amount = inputStream.readShort();
+                short damage = inputStream.readShort();
+
+                // Create the stack
+                Material itemMat = Material.getMaterial(itemType);
+                ItemStack itemStack = new ItemStack(itemMat, amount, damage);
+
+                // add it to the block
+                rblock.setSlot(slot, itemStack);
+            }
+
             return rblock;
         }
 
@@ -207,15 +246,15 @@ public class Backup {
         }
 
         // write the id
-        outputStream.write((byte) restorable.getType());
+        outputStream.write((byte) restorable.getType().ordinal());
 
         // Write it
-        if (restorable.getType() == 0) { // Protection, also TODO ENUMSSSSSSSSSSS
+        if (restorable.getType() == Restorable.Type.PROTECTION) {
             RestorableProtection rprotection = (RestorableProtection) restorable;
 
             outputStream.writeInt(rprotection.getId());
-            outputStream.writeByte(rprotection.getType());
-            outputStream.writeShort(rprotection.getBlockId());
+            outputStream.writeByte(rprotection.getProtectionType());
+            outputStream.writeUTF(rprotection.getBlockTypeString());
             outputStream.writeUTF(rprotection.getOwner());
             outputStream.writeUTF(rprotection.getWorld());
             outputStream.writeInt(rprotection.getX());
@@ -224,10 +263,10 @@ public class Backup {
             outputStream.writeUTF(rprotection.getData());
             outputStream.writeLong(rprotection.getCreated());
             outputStream.writeLong(rprotection.getUpdated());
-        } else if (restorable.getType() == 1) { // Block, TODO DID I SAY TO DO THE ENUM YET??
+        } else if (restorable.getType() == Restorable.Type.BLOCK) {
             RestorableBlock rblock = (RestorableBlock) restorable;
 
-            outputStream.writeShort(rblock.getId());
+            outputStream.writeUTF(rblock.getBlockTypeString());
             outputStream.writeUTF(rblock.getWorld());
             outputStream.writeInt(rblock.getX());
             outputStream.writeShort(rblock.getY());
@@ -241,7 +280,7 @@ public class Backup {
                 ItemStack stack = entry.getValue();
 
                 outputStream.writeShort(slot);
-                outputStream.writeShort(LWC.getInstance().getPhysicalDatabase().getTypeId(stack.getType()));
+                outputStream.writeUTF(stack.getType().name());
                 outputStream.writeShort(stack.getAmount());
                 outputStream.writeShort(stack.getDurability());
             }

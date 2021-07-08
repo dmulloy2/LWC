@@ -4,12 +4,12 @@
     <artifactId>lwc-economy</artifactId>
     <name>LWC-Economy</name>
     <packaging>jar</packaging>
-    <version>4.7.0-SNAPSHOT</version>
+    <version>4.8.0-SNAPSHOT</version>
 
     <parent>
         <groupId>com.griefcraft</groupId>
         <artifactId>lwc-parent</artifactId>
-        <version>4.7.0-SNAPSHOT</version>
+        <version>4.8.0-SNAPSHOT</version>
         <relativePath>../../</relativePath>
     </parent>
 

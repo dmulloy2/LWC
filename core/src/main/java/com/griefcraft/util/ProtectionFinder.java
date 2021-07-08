@@ -31,6 +31,7 @@ package com.griefcraft.util;
 import com.griefcraft.cache.ProtectionCache;
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.model.Protection;
+import com.griefcraft.util.matchers.BedMatcher;
 import com.griefcraft.util.matchers.DoorMatcher;
 import com.griefcraft.util.matchers.DoubleChestMatcher;
 import com.griefcraft.util.matchers.GravityMatcher;
@@ -186,6 +187,13 @@ public class ProtectionFinder {
             };
         }
 
+        // Beds
+        else if (BedMatcher.BEDS.contains(material)) {
+            return new Matcher[]{
+                    new BedMatcher()
+            };
+        }
+
         // Anything else
         else {
             return new Matcher[] {
@@ -305,7 +313,7 @@ public class ProtectionFinder {
             }
 
             // ensure it's the right block
-            if (protection.getBlockId() > 0) {
+            if (protection.getBlock() != null) {
                 if (protection.isBlockInWorld()) {
                     if (noAutoCache) {
                         return Result.E_FOUND;
@@ -384,7 +392,6 @@ public class ProtectionFinder {
         // go through the blocks
         for (int index = 1; index < size; index++) {
             BlockState state = blocks.get(index);
-
             if (lwc.isProtectable(state)) {
                 protectables.add(state);
             }

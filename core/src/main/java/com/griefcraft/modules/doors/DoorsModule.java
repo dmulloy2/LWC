@@ -43,6 +43,7 @@ import com.griefcraft.scripting.JavaModule;
 import com.griefcraft.scripting.event.LWCProtectionInteractEvent;
 import com.griefcraft.util.config.Configuration;
 import com.griefcraft.util.matchers.DoorMatcher;
+import org.bukkit.block.data.BlockData;
 
 public class DoorsModule extends JavaModule {
 
@@ -236,15 +237,27 @@ public class DoorsModule extends JavaModule {
             return null;
         }
 
-        Block found;
-
-        for (Material material : DoorMatcher.DOORS) {
-            if ((found = lwc.findAdjacentBlock(block, material)) != null) {
-                return found;
+        BlockData bd = block.getBlockData();
+        Block door = null;
+        if(bd instanceof Door) {
+            final Door d = (Door) bd;
+            final BlockFace face = d.getFacing();
+            if (face.getModX() == 0) {
+				if (d.getHinge() == Door.Hinge.RIGHT) {
+					door = block.getRelative(face.getModZ(), 0, 0);
+				} else {
+					door = block.getRelative(-face.getModZ(), 0, 0);
+				}
+			} else {
+                if (d.getHinge() == Door.Hinge.RIGHT) {
+                    door = block.getRelative(0, 0, -face.getModX());
+                } else {
+                    door = block.getRelative(0, 0, face.getModX());
+                }
             }
         }
-
-        return null;
+        return door != null && door.getBlockData() instanceof Door 
+                && ((Door) door.getBlockData()).getHinge() != ((Door) bd).getHinge() ? door : null;
     }
 
     /**

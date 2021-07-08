@@ -53,13 +53,14 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.bukkit.Location;
 
 public class WorldGuard extends JavaModule {
 
     /**
      * The WorldGuard module configuration
      */
-    private Configuration configuration = Configuration.load("worldguard.yml");
+    private final Configuration configuration = Configuration.load("worldguard.yml");
 
     /**
      * The world guard plugin if it is enabled
@@ -346,7 +347,7 @@ public class WorldGuard extends JavaModule {
         List<String> regions = regionManager.getApplicableRegionsIDs(vector);
 
         // Are they not in a region, and it's blocked there?
-        if (regions.size() == 0) {
+        if (regions.isEmpty()) {
             if (!configuration.getBoolean("worldguard.allowProtectionsOutsideRegions", true)) {
                 lwc.sendLocale(player, "lwc.worldguard.notallowed");
                 event.setCancelled(true);
@@ -373,12 +374,14 @@ public class WorldGuard extends JavaModule {
      * @return
      */
     private boolean canBuild(LocalPlayer localPlayer, Block block) {
+		Location l = block.getLocation();
+		if (l == null) return true;
         RegionPermissionModel regionPermissionModel = new RegionPermissionModel(localPlayer);
         if (regionPermissionModel.mayIgnoreRegionProtection(BukkitAdapter.adapt(block.getWorld()))) {
             return true;
         }
         RegionQuery regionQuery = worldGuard.getPlatform().getRegionContainer().createQuery();
-        return regionQuery.testBuild(BukkitAdapter.adapt(block.getLocation()), localPlayer);
+        return regionQuery.testBuild(BukkitAdapter.adapt(l), localPlayer);
     }
 
     /**

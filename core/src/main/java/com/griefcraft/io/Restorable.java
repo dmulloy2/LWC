@@ -28,15 +28,26 @@
 
 package com.griefcraft.io;
 
+import org.bukkit.Material;
+
 public interface Restorable {
+
+    public static enum Type {
+        LEGACY_BLOCK,
+        LEGACY_PROTECTION,
+        BLOCK,
+        PROTECTION
+    }
+
+    public Material getBlockType();
+    public String getBlockTypeString();
 
     /**
      * Get the restorable type
      *
-     * TODO Enum
      * @return
      */
-    public int getType();
+    public Type getType();
 
     /**
      * Restore the object into the world

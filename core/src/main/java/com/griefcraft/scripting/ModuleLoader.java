@@ -35,6 +35,7 @@ import com.griefcraft.scripting.event.LWCAccessEvent;
 import com.griefcraft.scripting.event.LWCBlockInteractEvent;
 import com.griefcraft.scripting.event.LWCCommandEvent;
 import com.griefcraft.scripting.event.LWCDropItemEvent;
+import com.griefcraft.scripting.event.LWCEntityInteractEvent;
 import com.griefcraft.scripting.event.LWCEvent;
 import com.griefcraft.scripting.event.LWCProtectionDestroyEvent;
 import com.griefcraft.scripting.event.LWCProtectionInteractEvent;
@@ -92,6 +93,11 @@ public class ModuleLoader {
          * Called when a block is left clicked
          */
         INTERACT_BLOCK(3),
+
+        /**
+         * Called when a entity is left clicked
+         */
+		INTERACT_ENTITY(3),
 
         /**
          * Called before a protection is registered
@@ -239,6 +245,8 @@ public class ModuleLoader {
                     event = Event.ACCESS_REQUEST;
                 } else if (parameter == LWCBlockInteractEvent.class) {
                     event = Event.INTERACT_BLOCK;
+                } else if (parameter == LWCEntityInteractEvent.class) {
+                    event = Event.INTERACT_ENTITY;
                 } else if (parameter == LWCCommandEvent.class) {
                     event = Event.COMMAND;
                 } else if (parameter == LWCDropItemEvent.class) {
@@ -332,6 +340,8 @@ public class ModuleLoader {
                     module.onProtectionInteract((LWCProtectionInteractEvent) event);
                 } else if (type == Event.INTERACT_BLOCK) {
                     module.onBlockInteract((LWCBlockInteractEvent) event);
+                } else if (type == Event.INTERACT_ENTITY) {
+                    module.onEntityInteract((LWCEntityInteractEvent) event);
                 } else if (type == Event.SEND_LOCALE) {
                     module.onSendLocale((LWCSendLocaleEvent) event);
                 } else if (type == Event.ACCESS_REQUEST) {

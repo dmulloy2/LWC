@@ -8,7 +8,7 @@ description: >
              Other blocks can also be protected individually, if configured.
 load: startup
 softdepend: [ 'iConomy', 'Permissions', 'PermissionsBukkit', 'Vault' ]
-api-version: 1.13
+api-version: 1.14
 
 commands:
   lwc:

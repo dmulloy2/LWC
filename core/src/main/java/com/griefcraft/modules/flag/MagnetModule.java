@@ -28,7 +28,6 @@
 
 package com.griefcraft.modules.flag;
 
-import com.griefcraft.bukkit.EntityBlock;
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.model.Flag;
 import com.griefcraft.model.Protection;
@@ -43,7 +42,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
-import org.bukkit.event.block.BlockEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
@@ -51,7 +49,7 @@ import java.util.*;
 
 public class MagnetModule extends JavaModule {
 
-    private Configuration configuration = Configuration.load("magnet.yml");
+    private final Configuration configuration = Configuration.load("magnet.yml");
 
     /**
      * If this module is enabled
@@ -76,19 +74,21 @@ public class MagnetModule extends JavaModule {
     /**
      * The current entity queue
      */
-    private final Queue<MagnetNode> items = new LinkedList<MagnetNode>();
+    private final Queue<MagnetNode> items = new LinkedList();
 
     private class MagnetNode { Item item; Protection protection; }
 
     // does all of the work
     // searches the worlds for items and magnet chests nearby
     private class MagnetTask implements Runnable {
+
+        @Override
         public void run() {
             Server server = Bukkit.getServer();
             LWC lwc = LWC.getInstance();
 
             // Do we need to requeue?
-            if (items.size() == 0) {
+            if (items.isEmpty()) {
                 for (World world : server.getWorlds()) {
                     for (Entity entity : world.getEntities()) {
                         if (!(entity instanceof Item)) {
@@ -244,7 +244,7 @@ public class MagnetModule extends JavaModule {
         }
 
         // get the item blacklist
-        List<String> temp = configuration.getStringList("magnet.blacklist", new ArrayList<String>());
+        List<String> temp = configuration.getStringList("magnet.blacklist", new ArrayList());
 
         for (String item : temp) {
             Material material = Material.matchMaterial(item);

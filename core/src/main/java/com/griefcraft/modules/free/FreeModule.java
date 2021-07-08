@@ -82,12 +82,12 @@ public class FreeModule extends JavaModule {
                 }
 
                 protection.remove();
-                lwc.sendLocale(player, "protection.interact.remove.finalize", "block", LWC.materialToString(protection.getBlockId()));
+                lwc.sendLocale(player, "protection.interact.remove.finalize", "block", LWC.materialToString(protection.getBlock()));
             }
 
             lwc.removeModes(player);
         } else {
-            lwc.sendLocale(player, "protection.interact.error.notowner", "block", LWC.materialToString(protection.getBlockId()));
+            lwc.sendLocale(player, "protection.interact.error.notowner", "block", LWC.materialToString(protection.getBlock()));
             lwc.removeModes(player);
         }
     }

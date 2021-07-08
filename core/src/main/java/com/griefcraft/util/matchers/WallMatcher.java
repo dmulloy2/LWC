@@ -29,13 +29,12 @@
 package com.griefcraft.util.matchers;
 
 import com.griefcraft.util.ProtectionFinder;
-import com.griefcraft.util.SetUtil;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 
-import java.util.EnumSet;
-import java.util.Set;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.FaceAttachable;
 
 /**
  * Matches wall entities
@@ -44,38 +43,21 @@ import java.util.Set;
 public class WallMatcher implements ProtectionFinder.Matcher {
 
     /**
-     * Blocks that can be attached to the wall and be protected.
-     * This assumes that the block is DESTROYED if the wall they are attached to is broken.
-     */
-    public static final Set<Material> PROTECTABLES_WALL = EnumSet.of(Material.WALL_SIGN);
-
-    /**
-     * Those evil levers and buttons have all different bits for directions. Gah!
-     */
-    public static final Set<Material> PROTECTABLES_LEVERS_ET_AL = EnumSet.of(Material.STONE_BUTTON, Material.LEVER);
-
-    /**
      * Possible faces around the base block that protections could be at
      */
-    public static final BlockFace[] POSSIBLE_FACES = new BlockFace[]{ BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
+    public static final BlockFace[] POSSIBLE_FACES = new BlockFace[]{ BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST, BlockFace.DOWN, BlockFace.UP };
 
     public boolean matches(ProtectionFinder finder) {
         // The block we are working on
         Block block = finder.getBaseBlock().getBlock();
 
-        // Match wall signs to the wall it's attached to
+        // look to see if any adjacent protections depend on this block
         for (BlockFace blockFace : POSSIBLE_FACES) {
-            Block face; // the relative block
-
-            if ((face = block.getRelative(blockFace)) != null) {
-                // Try and match it
-                Block matched = tryMatchBlock(face, blockFace);
-
-                // We found something ..! Try and load the protection
-                if (matched != null) {
-                    finder.addBlock(matched);
-                    return true;
-                }
+            Block face = block.getRelative(blockFace);
+            Block matched = getAttachedTo(face);
+            if(matched != null && matched.getX() == block.getX() && matched.getY() == block.getY() && matched.getZ() == block.getZ()) {
+                finder.addBlock(face);
+                return true;
             }
         }
 
@@ -89,63 +71,17 @@ public class WallMatcher implements ProtectionFinder.Matcher {
      * @param matchingFace
      * @return
      */
-    private Block tryMatchBlock(Block block, BlockFace matchingFace) {
-        byte direction = block.getData();
-
-        // Blocks such as wall signs
-        if (PROTECTABLES_WALL.contains(block.getType()) || block.getType().name().contains("WALL_BANNER")) {
-            byte EAST = 0x05;
-            byte WEST = 0x04;
-            byte SOUTH = 0x03;
-            byte NORTH = 0x02;
-
-            if (matchingFace == BlockFace.EAST && (direction & EAST) == EAST) {
-                return block;
-            } else if (matchingFace == BlockFace.WEST && (direction & WEST) == WEST) {
-                return block;
-            } else if (matchingFace == BlockFace.SOUTH && (direction & SOUTH) == SOUTH) {
-                return block;
-            } else if (matchingFace == BlockFace.NORTH && (direction & NORTH) == NORTH) {
-                return block;
-            }
+    private Block getAttachedTo(Block block) {
+        final BlockData d = block.getBlockData();
+		// Paper 1.16 breaks this:
+        /*if (d instanceof Switch && ((Switch) d).getFace() != Switch.Face.WALL) {
+            return block.getRelative(((Switch) d).getFace() == Switch.Face.FLOOR ? BlockFace.DOWN : BlockFace.UP);
+        } else */
+		if (d instanceof FaceAttachable && ((FaceAttachable) d).getAttachedFace() != FaceAttachable.AttachedFace.WALL) {
+            return block.getRelative(((FaceAttachable) d).getAttachedFace() == FaceAttachable.AttachedFace.FLOOR ? BlockFace.DOWN : BlockFace.UP);
+        } else if (d instanceof Directional) {
+            return block.getRelative(((Directional) d).getFacing().getOppositeFace());
         }
-
-        // Levers, buttons
-        else if (PROTECTABLES_LEVERS_ET_AL.contains(block.getType())) {
-            byte EAST = 0x4;
-            byte WEST = 0x3;
-            byte SOUTH = 0x1;
-            byte NORTH = 0x2;
-
-            if (matchingFace == BlockFace.EAST && (direction & EAST) == EAST) {
-                return block;
-            } else if (matchingFace == BlockFace.WEST && (direction & WEST) == WEST) {
-                return block;
-            } else if (matchingFace == BlockFace.SOUTH && (direction & SOUTH) == SOUTH) {
-                return block;
-            } else if (matchingFace == BlockFace.NORTH && (direction & NORTH) == NORTH) {
-                return block;
-            }
-        }
-
-        // Blocks such as trap doors
-        else if (DoorMatcher.TRAP_DOORS.contains(block.getType())) {
-            byte EAST = 0x2;
-            byte WEST = 0x3;
-            byte SOUTH = 0x0;
-            byte NORTH = 0x1;
-
-            if (matchingFace == BlockFace.WEST && (direction & EAST) == EAST) {
-                return block;
-            } else if (matchingFace == BlockFace.EAST && (direction & WEST) == WEST) {
-                return block;
-            } else if (matchingFace == BlockFace.NORTH && (direction & SOUTH) == SOUTH) {
-                return block;
-            } else if (matchingFace == BlockFace.SOUTH && (direction & NORTH) == NORTH) {
-                return block;
-            }
-        }
-
         return null;
     }
 

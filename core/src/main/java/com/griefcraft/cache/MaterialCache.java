@@ -71,6 +71,14 @@ public class MaterialCache {
         return capacity;
     }
 
+    public int getSize() {
+        return typeToId.size();
+    }
+
+    public boolean isEmpty() {
+        return typeToId.isEmpty();
+    }
+
     /**
      * Clears the entire protection cache
      */
